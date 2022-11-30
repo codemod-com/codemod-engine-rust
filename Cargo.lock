@@ -256,6 +256,9 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "json",
+ "tree-sitter",
+ "tree-sitter-traversal",
+ "tree-sitter-typescript",
  "wax",
 ]
 
@@ -418,6 +421,34 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "tree-sitter"
+version = "0.20.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4423c784fe11398ca91e505cdc71356b07b1a924fc8735cfab5333afe3e18bc"
+dependencies = [
+ "cc",
+ "regex",
+]
+
+[[package]]
+name = "tree-sitter-traversal"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df8a158225e4a4d8505f071340bba9edd109b23f01b70540dccb7c799868f307"
+dependencies = [
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-typescript"
+version = "0.20.1"
+source = "git+https://github.com/tree-sitter/tree-sitter-typescript.git#0ae382803abce0807e90f498105c713b9233e0b2"
+dependencies = [
+ "cc",
+ "tree-sitter",
 ]
 
 [[package]]

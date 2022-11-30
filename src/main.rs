@@ -1,5 +1,5 @@
 use std::fs::create_dir_all;
-use std::io::{Read, BufReader, Write};
+use std::io::{Read, Write};
 use std::{path::PathBuf, ffi::OsStr, fs::File, collections::hash_map::DefaultHasher};
 
 use std::hash::{Hash, Hasher};
@@ -7,6 +7,9 @@ use std::hash::{Hash, Hasher};
 use clap::Parser;
 use json::object;
 use wax::{Glob, Pattern, CandidatePath};
+
+mod tree;
+use crate::tree::build_tree;
 
 #[derive(Debug, Parser)]
 pub(crate) struct CommandLineArguments {
@@ -110,8 +113,6 @@ fn main() {
 
         let mut old_file = File::open(old_path).unwrap();
 
-        
-
         let mut new_file = File::create(new_path).unwrap();
 
         let mut buffer = String::new();
@@ -128,5 +129,7 @@ fn main() {
         };
 
         println!("{}", json::stringify(rewrite_message));
+
+        let tree = build_tree(buffer);
     }
 }
