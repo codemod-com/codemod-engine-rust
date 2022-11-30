@@ -1,1 +1,1 @@
-./target/release/nora-rust-engine -d "/gppd/intuita/egghead-next" -p "**/pages" -a "**/node_modules/**/*"
+./target/release/nora-rust-engine -d "/gppd/intuita/terraform-website" -p "**/pages" -a "**/node_modules/**/*"

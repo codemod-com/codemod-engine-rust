@@ -1,4 +1,8 @@
-use std::{path::PathBuf, ffi::OsStr};
+use std::fs::create_dir_all;
+use std::io::{Read, BufReader, Write};
+use std::{path::PathBuf, ffi::OsStr, fs::File, collections::hash_map::DefaultHasher};
+
+use std::hash::{Hash, Hasher};
 
 use clap::Parser;
 use json::object;
@@ -31,13 +35,6 @@ pub(crate) struct CommandLineArguments {
     pub(crate) output_directory_path: Option<String>,
 }
 
-pub(crate) struct RewriteMessage {
-    pub(crate) k: u8,
-    pub(crate) i: String,
-    pub(crate) o: String,
-    pub(crate) c: String,
-}
-
 fn build_path_bufs(
     directory: &String,
     pattern: &String,
@@ -58,6 +55,12 @@ fn build_path_bufs(
         .collect::<Vec<PathBuf>>();
 }
 
+fn build_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
+}
+
 fn main() {
     let command_line_arguments = CommandLineArguments::parse();
 
@@ -72,11 +75,11 @@ fn main() {
         &antipatterns,
     );
 
-    for path_buf in page_path_bufs {
-        let extension = path_buf.extension().unwrap_or_default();
-        let file_stem = path_buf.file_stem().unwrap_or_default();
+    for out_path_buf in page_path_bufs {
+        let extension = out_path_buf.extension().unwrap_or_default();
+        let file_stem = out_path_buf.file_stem().unwrap_or_default();
 
-        let mut new_path_buf: PathBuf = path_buf.into_iter().map(|osstr| {
+        let mut new_path_buf: PathBuf = out_path_buf.into_iter().map(|osstr| {
             if osstr == "pages" {
                 return OsStr::new("apps")
             }
@@ -96,9 +99,30 @@ fn main() {
 
         let new_path = new_path_buf.to_str().unwrap();
 
+        {
+            let mut dir_path_buf = new_path_buf.clone();
+            dir_path_buf.pop();
+
+            create_dir_all(dir_path_buf).unwrap();
+        }
+
+        let old_path = out_path_buf.to_str().unwrap().clone();
+
+        let mut old_file = File::open(old_path).unwrap();
+
+        
+
+        let mut new_file = File::create(new_path).unwrap();
+
+        let mut buffer = String::new();
+
+        old_file.read_to_string(&mut buffer).unwrap();
+
+        new_file.write_all(buffer.as_bytes()).unwrap();
+
         let rewrite_message = object! {
             k: 3,
-            i: path_buf.to_str().unwrap(),
+            i: old_path,
             o: new_path,
             c: "nextjs"
         };
