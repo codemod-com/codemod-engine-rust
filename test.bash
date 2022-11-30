@@ -1,0 +1,1 @@
+./target/debug/nora-rust-engine -p "/gppd/intuita/egghead-next/**/*.tsx" -p "**/node_modules/**/*"
