@@ -1,11 +1,12 @@
-use std::path::PathBuf;
-
 use clap::Parser;
-use glob::glob;
-use glob::Pattern;
+use wax::{Glob, Pattern, CandidatePath};
 
 #[derive(Debug, Parser)]
 pub(crate) struct CommandLineArguments {
+    /// Pass the directory path
+    #[clap(short = 'd', long)]
+    pub(crate) directory: String,
+
     /// Pass the glob pattern for file paths
     #[clap(short = 'p', long)]
     pub(crate) pattern: String,
@@ -27,24 +28,42 @@ pub(crate) struct CommandLineArguments {
     pub(crate) output_directory_path: Option<String>,
 }
 
+
+
 fn main() {
     let command_line_arguments = CommandLineArguments::parse();
 
     let pattern = command_line_arguments.pattern;
 
-    let antipatterns: Vec<Pattern> = command_line_arguments.antipatterns
+    let antipatterns: Vec<Glob> = command_line_arguments.antipatterns
         .iter()
-        .map(|p| Pattern::new(p).unwrap())
+        .map(|p| Glob::new(p).unwrap())
         .collect();
 
-    let path_bufs: Vec<PathBuf> = glob(&pattern).unwrap()
-        .map(|p| p.unwrap())
-        .filter(|path| {
-            !antipatterns.iter().any(|ap| ap.matches_path(&path))
-        })
-        .collect();
+    let glob = Glob::new(&pattern).unwrap();
 
-    for path_buf in path_bufs {
-        println!("{:?}", path_buf.display())
+    for entry in glob.walk(command_line_arguments.directory) {
+        let entry = entry.unwrap();
+        let path = entry.into_path();
+        let displayPath = path.display();
+        let path = path.as_path();
+
+        // let candidate_path = candidate_path.into_owned();
+        let x = antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
+
+        if !x {
+            println!("{:?}", displayPath)
+        }    
     }
+
+    // let path_bufs: Vec<PathBuf> = glob(&pattern).unwrap()
+    //     .map(|p| p.unwrap())
+    //     .filter(|path| {
+    //         !antipatterns.iter().any(|ap| ap.matches_path(&path))
+    //     })
+    //     .collect();
+
+    // for path_buf in path_bufs {
+    //     println!("{:?}", path_buf.display())
+    // }
 }
