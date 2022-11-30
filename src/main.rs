@@ -64,19 +64,29 @@ fn main() {
         &antipatterns,
     );
 
-    for mut path_buf in page_path_bufs {
-        let extension = path_buf.extension().unwrap_or(OsStr::new("")).to_str().unwrap().to_owned();
+    for path_buf in page_path_bufs {
+        let extension = path_buf.extension().unwrap_or_default();
+        let file_stem = path_buf.file_stem().unwrap_or_default();
 
-        let file_stem = path_buf.file_stem().unwrap_or(OsStr::new("")).to_str().unwrap().to_owned();
+        let mut new_path_buf: PathBuf = path_buf.into_iter().map(|osstr| {
+            if osstr == "pages" {
+                return OsStr::new("apps")
+            }
 
-        if file_stem == "index" {
-            path_buf.pop();
+            return osstr;
+        }).collect();
 
-            path_buf.push("page".to_owned() + &extension);
+        new_path_buf.pop();
+
+        if file_stem != "index" {
+            new_path_buf.push(file_stem);
         }
 
-        let new_path = path_buf.as_path().to_str().unwrap();
-        let new_path = new_path.replace("pages", "apps");
+        let new_file_name = "page".to_owned() + extension.to_str().unwrap();
+
+        new_path_buf.push(new_file_name);
+
+        let new_path = path_buf.to_str().unwrap();
 
         println!("{:?}", new_path);
     }
