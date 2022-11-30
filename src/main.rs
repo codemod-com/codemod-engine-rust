@@ -1,4 +1,4 @@
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 use wax::{Glob, Pattern, CandidatePath};
@@ -30,21 +30,14 @@ pub(crate) struct CommandLineArguments {
     pub(crate) output_directory_path: Option<String>,
 }
 
-
-
-fn main() {
-    let command_line_arguments = CommandLineArguments::parse();
-
-    let pattern = command_line_arguments.pattern;
-
-    let antipatterns: Vec<Glob> = command_line_arguments.antipatterns
-        .iter()
-        .map(|p| Glob::new(p).unwrap())
-        .collect();
-
+fn build_path_bufs(
+    directory: &String,
+    pattern: &String,
+    antipatterns: &Vec<Glob>,
+) -> Vec<PathBuf> {
     let glob = Glob::new(&pattern).unwrap();
 
-    let path_bufs: Vec<PathBuf> = glob.walk(command_line_arguments.directory)
+    return glob.walk(directory)
         .map(|walk_entry| walk_entry.unwrap())
         .map(|entry|  {
             return entry.into_path();
@@ -52,9 +45,24 @@ fn main() {
         .filter(|path| {
             let path = path.as_path();
 
-            return !antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
+            return antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
         })
+        .collect::<Vec<PathBuf>>();
+}
+
+fn main() {
+    let command_line_arguments = CommandLineArguments::parse();
+
+    let antipatterns: Vec<Glob> = command_line_arguments.antipatterns
+        .iter()
+        .map(|p| Glob::new(p).unwrap())
         .collect();
+
+    let path_bufs = build_path_bufs(
+        &command_line_arguments.directory,
+        &command_line_arguments.pattern,
+        &antipatterns,
+    );
 
     for path_buf in path_bufs {
         println!("{:?}", path_buf.display())
