@@ -1,3 +1,0 @@
-fn find_head() {
-    
-}

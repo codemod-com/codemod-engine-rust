@@ -1,7 +1,7 @@
 use tree_sitter::{Parser, Tree};
 
 pub fn build_tree(
-    text: impl AsRef<[u8]>
+    text: &impl AsRef<[u8]>
 ) -> Tree {
     let mut parser = Parser::new();
 

@@ -1,14 +1,14 @@
 use std::fs::create_dir_all;
 use std::io::{Read, Write};
-use std::{path::PathBuf, ffi::OsStr, fs::File, collections::hash_map::DefaultHasher};
-
-use std::hash::{Hash, Hasher};
+use std::{path::PathBuf, ffi::OsStr, fs::File};
 
 use clap::Parser;
 use json::object;
 use wax::{Glob, Pattern, CandidatePath};
 
 mod tree;
+mod head;
+use crate::head::find_head;
 use crate::tree::build_tree;
 
 #[derive(Debug, Parser)]
@@ -56,12 +56,6 @@ fn build_path_bufs(
             return !antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
         })
         .collect::<Vec<PathBuf>>();
-}
-
-fn build_hash<T: Hash>(t: &T) -> u64 {
-    let mut s = DefaultHasher::new();
-    t.hash(&mut s);
-    s.finish()
 }
 
 fn main() {
@@ -130,6 +124,8 @@ fn main() {
 
         println!("{}", json::stringify(rewrite_message));
 
-        let tree = build_tree(buffer);
+        let tree = build_tree(&buffer);
+
+        find_head(&tree, &buffer.as_bytes());
     }
 }
