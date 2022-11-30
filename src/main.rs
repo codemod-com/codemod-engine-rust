@@ -30,6 +30,13 @@ pub(crate) struct CommandLineArguments {
     pub(crate) output_directory_path: Option<String>,
 }
 
+pub(crate) struct RewriteMessage {
+    pub(crate) k: u8,
+    pub(crate) i: String,
+    pub(crate) o: String,
+    pub(crate) c: String,
+}
+
 fn build_path_bufs(
     directory: &String,
     pattern: &String,
@@ -82,11 +89,11 @@ fn main() {
             new_path_buf.push(file_stem);
         }
 
-        let new_file_name = "page".to_owned() + extension.to_str().unwrap();
+        let new_file_name = "page.".to_owned() + extension.to_str().unwrap();
 
         new_path_buf.push(new_file_name);
 
-        let new_path = path_buf.to_str().unwrap();
+        let new_path = new_path_buf.to_str().unwrap();
 
         println!("{:?}", new_path);
     }

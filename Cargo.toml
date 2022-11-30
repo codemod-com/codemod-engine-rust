@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
-wax = { version = "0.5.0"}
-regex = {}
+wax = { version = "0.5.0" }
+json = { version = "0.12.4" }
