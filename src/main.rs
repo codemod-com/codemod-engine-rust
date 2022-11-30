@@ -1,6 +1,7 @@
 use std::{path::PathBuf, ffi::OsStr};
 
 use clap::Parser;
+use json::object;
 use wax::{Glob, Pattern, CandidatePath};
 
 #[derive(Debug, Parser)]
@@ -95,6 +96,13 @@ fn main() {
 
         let new_path = new_path_buf.to_str().unwrap();
 
-        println!("{:?}", new_path);
+        let rewrite_message = object! {
+            k: 3,
+            i: path_buf.to_str().unwrap(),
+            o: new_path,
+            c: "nextjs"
+        };
+
+        println!("{}", json::stringify(rewrite_message));
     }
 }
