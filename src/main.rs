@@ -6,7 +6,11 @@ use glob::Pattern;
 pub(crate) struct CommandLineArguments {
     /// Pass the glob pattern for file paths
     #[clap(short = 'p', long)]
-    pub(crate) pattern: Vec<String>,
+    pub(crate) pattern: String,
+
+    /// Pass the glob antipattern for file paths
+    #[clap(short = 'a', long)]
+    pub(crate) antipatterns: Vec<String>,
     
     /// Pass the group(s) of codemods for execution
     #[clap(short = 'g', long)]
@@ -26,26 +30,19 @@ fn main() {
 
     let pattern = command_line_arguments.pattern;
 
-    let first_pattern = pattern.first().unwrap();
-    let other_patterns: Vec<&String> = pattern
+    let antipatterns: Vec<Pattern> = command_line_arguments.antipatterns
         .iter()
-        .filter(|p| *p != first_pattern)
+        .map(|p| Pattern::new(p).unwrap())
         .collect();
 
-    // dbg!(&other_patterns);
-
-    for entry in glob(first_pattern).unwrap() {
+    for entry in glob(&pattern).unwrap() {
         match entry {
             Ok(path) => {
-                for other_pattern in &other_patterns {
-                    let px = Pattern::new(&other_pattern).unwrap();
+                let matches = antipatterns.iter().any(|ap| ap.matches_path(&path));
 
-                    if px.matches_path(&path) {
-                        println!("NO {:?}", path.display())
-                    }
+                if !matches {
+                    println!("{:?}", path.display())
                 }
-
-                println!("{:?}", path.display())
             },
 
             // if the path matched but was unreadable,
