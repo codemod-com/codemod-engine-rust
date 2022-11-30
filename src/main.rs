@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use glob::glob;
 use glob::Pattern;
@@ -35,19 +37,14 @@ fn main() {
         .map(|p| Pattern::new(p).unwrap())
         .collect();
 
-    for entry in glob(&pattern).unwrap() {
-        match entry {
-            Ok(path) => {
-                let matches = antipatterns.iter().any(|ap| ap.matches_path(&path));
+    let path_bufs: Vec<PathBuf> = glob(&pattern).unwrap()
+        .map(|p| p.unwrap())
+        .filter(|path| {
+            !antipatterns.iter().any(|ap| ap.matches_path(&path))
+        })
+        .collect();
 
-                if !matches {
-                    println!("{:?}", path.display())
-                }
-            },
-
-            // if the path matched but was unreadable,
-            // thereby preventing its contents from matching
-            Err(e) => println!("{:?}", e),
-        }
+    for path_buf in path_bufs {
+        println!("{:?}", path_buf.display())
     }
 }
