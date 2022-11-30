@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, ffi::OsStr};
 
 use clap::Parser;
 use wax::{Glob, Pattern, CandidatePath};
@@ -45,7 +45,7 @@ fn build_path_bufs(
         .filter(|path| {
             let path = path.as_path();
 
-            return antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
+            return !antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
         })
         .collect::<Vec<PathBuf>>();
 }
@@ -58,13 +58,26 @@ fn main() {
         .map(|p| Glob::new(p).unwrap())
         .collect();
 
-    let path_bufs = build_path_bufs(
+    let page_path_bufs = build_path_bufs(
         &command_line_arguments.directory,
-        &command_line_arguments.pattern,
+        &String::from("**/pages/**/*.{ts,tsx}"),
         &antipatterns,
     );
 
-    for path_buf in path_bufs {
-        println!("{:?}", path_buf.display())
+    for mut path_buf in page_path_bufs {
+        let extension = path_buf.extension().unwrap_or(OsStr::new("")).to_str().unwrap().to_owned();
+
+        let file_stem = path_buf.file_stem().unwrap_or(OsStr::new("")).to_str().unwrap().to_owned();
+
+        if file_stem == "index" {
+            path_buf.pop();
+
+            path_buf.push("page".to_owned() + &extension);
+        }
+
+        let new_path = path_buf.as_path().to_str().unwrap();
+        let new_path = new_path.replace("pages", "apps");
+
+        println!("{:?}", new_path);
     }
 }
