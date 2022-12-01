@@ -5,7 +5,7 @@ pub fn build_tree(
 ) -> Tree {
     let mut parser = Parser::new();
 
-    parser.set_language(tree_sitter_typescript::language_typescript()).unwrap();
+    parser.set_language(tree_sitter_typescript::language_tsx()).unwrap();
 
     return parser.parse(text, None).unwrap();
 }

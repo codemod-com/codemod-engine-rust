@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use tree_sitter::{Query, QueryCursor, Node};
 
+#[derive(Debug)]
 pub struct NextHeadImportStatement {
     pub identifier_range: Range<usize>,
     pub identifier_text: String,
@@ -12,7 +13,7 @@ pub fn find_next_head_import_statements(
     text_provider: &[u8],
 ) -> Vec<NextHeadImportStatement> {
     let query = Query::new(
-        tree_sitter_typescript::language_typescript(),
+        tree_sitter_typescript::language_tsx(),
         r#"(
             (import_statement
                 (import_clause 
@@ -58,7 +59,7 @@ pub fn find_head_jsx_element_children(
     let source = source.replace("@_name", &statement.identifier_text);
 
     let query = Query::new(
-        tree_sitter_typescript::language_typescript(),
+        tree_sitter_typescript::language_tsx(),
         &source,
     ).unwrap();
 
@@ -68,9 +69,21 @@ pub fn find_head_jsx_element_children(
 
     let query_matches = query_cursor.matches(&query, *root_node, text_provider);
 
+    let mut child_nodes = Vec::<Node>::new();
+
     for query_match in query_matches {
+        let nodes = query_match.nodes_for_capture_index(jsx_element_index);
 
+        nodes.for_each(|node| {
+            let child_count = node.child_count();
+
+            for i in 0..child_count {
+                if i == 0 || i == (child_count - 1) {
+                    continue;
+                }
+
+                child_nodes.push(node.child(i).unwrap());
+            }
+        });
     }
-
-
 }
