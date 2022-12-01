@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 use std::io::{Read, Write};
-use std::{path::PathBuf, ffi::OsStr, fs::File};
+use std::{path::PathBuf, fs::File};
 
 use clap::Parser;
 use json::object;
@@ -8,7 +8,9 @@ use wax::{Glob, Pattern, CandidatePath};
 
 mod tree;
 mod head;
+mod paths;
 use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text};
+use crate::paths::build_path_dto;
 use crate::tree::build_tree;
 
 #[derive(Debug, Parser)]
@@ -72,42 +74,14 @@ fn main() {
         &antipatterns,
     );
 
-    for out_path_buf in page_path_bufs {
-        let extension = out_path_buf.extension().unwrap_or_default();
-        let file_stem = out_path_buf.file_stem().unwrap_or_default();
+    for old_path_buf in page_path_bufs {
+        let path_dto = build_path_dto(old_path_buf);
 
-        let mut new_path_buf: PathBuf = out_path_buf.into_iter().map(|osstr| {
-            if osstr == "pages" {
-                return OsStr::new("apps")
-            }
+        let mut old_file = File::open(&path_dto.old_path).unwrap();
 
-            return osstr;
-        }).collect();
+        create_dir_all(&path_dto.new_dir_path).unwrap();
 
-        new_path_buf.pop();
-
-        if file_stem != "index" {
-            new_path_buf.push(file_stem);
-        }
-
-        let new_file_name = "page.".to_owned() + extension.to_str().unwrap();
-
-        new_path_buf.push(new_file_name);
-
-        let new_path = new_path_buf.to_str().unwrap();
-
-        {
-            let mut dir_path_buf = new_path_buf.clone();
-            dir_path_buf.pop();
-
-            create_dir_all(dir_path_buf).unwrap();
-        }
-
-        let old_path = out_path_buf.to_str().unwrap().clone();
-
-        let mut old_file = File::open(old_path).unwrap();
-
-        let mut new_file = File::create(new_path).unwrap();
+        let mut new_file = File::create(&path_dto.new_page_path).unwrap();
 
         let mut buffer = String::new();
 
@@ -117,8 +91,8 @@ fn main() {
 
         let rewrite_message = object! {
             k: 3,
-            i: old_path,
-            o: new_path,
+            i: path_dto.old_path,
+            o: path_dto.new_page_path,
             c: "nextjs"
         };
 

@@ -79,23 +79,6 @@ pub fn find_head_jsx_elements<'a>(
 
     nodes
 
-    // let mut child_nodes = Vec::<Node>::new();
-    // for query_match in query_matches {
-    //     let nodes = query_match.nodes_for_capture_index(jsx_element_index);
-
-    //     nodes.for_each(|node| {
-    //         let child_count = node.child_count();
-
-    //         for i in 0..child_count {
-    //             if i == 0 || i == (child_count - 1) {
-    //                 continue;
-    //             }
-
-    //             child_nodes.push(node.child(i).unwrap());
-    //         }
-    //     });
-    // }
-
     // let head_text = build_head_text(&child_nodes, text_provider);
 
     // println!("{}", head_text);
