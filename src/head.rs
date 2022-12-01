@@ -90,12 +90,10 @@ pub fn find_head_jsx_element_children(
     }
 
     for child_node in child_nodes {
-        let Range { start, end } = child_node.byte_range();
-
         let identifiers = find_identifiers(
             language,
             &child_node,
-            &text_provider[start..end],
+            text_provider,
         );
 
         println!("{:#?}", identifiers);
@@ -107,13 +105,9 @@ pub fn find_identifiers(
     node: &Node,
     text: &[u8],
 ) -> HashSet<String> {
-    let source = r#"(
-        (identifier)* @identifier
-    )"#;
-
     let query = Query::new(
         *language,
-        source,
+        r#"((identifier)* @identifier)"#,
     ).unwrap();
 
     let mut query_cursor = QueryCursor::new();
