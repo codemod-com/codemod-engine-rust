@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{Read, Write, BufReader};
 use std::{path::PathBuf, fs::File};
 
 use clap::Parser;
@@ -57,15 +57,16 @@ fn main() {
     for old_path_buf in page_path_bufs {
         let path_dto = build_path_dto(old_path_buf);
 
-        let mut old_file = File::open(&path_dto.old_path).unwrap();
+        let old_file = File::open(&path_dto.old_path).unwrap();
 
-        let mut buffer = String::new();
-
-        old_file.read_to_string(&mut buffer).unwrap();
+        let mut reader = BufReader::new(old_file);
+        let mut buffer = Vec::new();
+    
+        reader.read_to_end(&mut buffer).unwrap();
 
         let tree = build_tree(&language, &buffer);
         let root_node = tree.root_node();
-        let bytes = buffer.as_bytes();
+        let bytes = buffer.as_ref();
 
         {
             let page_file_text = build_page_file_text(&language, &root_node, bytes);
