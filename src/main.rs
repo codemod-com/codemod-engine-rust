@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::fs::create_dir_all;
 use std::io::{Read, Write};
 use std::{path::PathBuf, fs::File};
 
@@ -13,7 +12,9 @@ mod command_line_arguments;
 mod tree;
 mod head;
 mod paths;
+mod page_file;
 use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text, find_identifiers, find_import_statements};
+use crate::page_file::build_page_file_text;
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
 
@@ -56,8 +57,6 @@ fn main() {
 
         let mut old_file = File::open(&path_dto.old_path).unwrap();
 
-        create_dir_all(&path_dto.new_dir_path).unwrap();
-
         let mut new_file = File::create(&path_dto.new_page_path).unwrap();
 
         let mut buffer = String::new();
@@ -79,18 +78,20 @@ fn main() {
 
         let tree = build_tree(&language, &buffer);
         let root_node = tree.root_node();
-        let text_provider = buffer.as_bytes();
+        let bytes = buffer.as_bytes();
 
-        let statements = find_next_head_import_statements(&language, &root_node, text_provider);
+        let page_file_text = build_page_file_text(&root_node, bytes);
+
+        let statements = find_next_head_import_statements(&language, &root_node, bytes);
 
         for statement in statements {
-            let head_jsx_elements = find_head_jsx_elements(&language, &root_node, text_provider, &statement);
+            let head_jsx_elements = find_head_jsx_elements(&language, &root_node, bytes, &statement);
 
             for head_jsx_element in head_jsx_elements {
-                let identifiers = find_identifiers(&language, &root_node, text_provider);
+                let identifiers = find_identifiers(&language, &root_node, bytes);
 
                 let import_statements = identifiers.iter()
-                    .flat_map(|identifier| find_import_statements(&language, &root_node, text_provider, &identifier))
+                    .flat_map(|identifier| find_import_statements(&language, &root_node, bytes, &identifier))
                     .collect::<HashSet<Node>>()
                     .iter()
                     .cloned()
@@ -99,7 +100,7 @@ fn main() {
                 let head_text = build_head_text(
                     &head_jsx_element,
                     &import_statements,
-                    text_provider,
+                    bytes,
                 );
 
                 let mut head_file = File::create(&path_dto.new_head_path).unwrap();
