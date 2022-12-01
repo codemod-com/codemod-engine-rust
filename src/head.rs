@@ -137,7 +137,7 @@ pub fn build_head_text(
         string.push_str(text);
     }
 
-    string.push_str("<>);\n");
+    string.push_str("</>);\n");
     string.push_str("}\n");
 
     string

@@ -116,6 +116,10 @@ fn main() {
                 );
 
                 println!("{}", head_text);
+
+                let mut head_file = File::create(&path_dto.new_head_path).unwrap();
+
+                head_file.write_all(head_text.as_bytes()).unwrap();
             }
                 
         }
