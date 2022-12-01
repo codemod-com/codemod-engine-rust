@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::fs::create_dir_all;
-use std::hash::{Hasher, Hash};
 use std::io::{Read, Write};
 use std::{path::PathBuf, fs::File};
 
@@ -14,7 +13,7 @@ mod command_line_arguments;
 mod tree;
 mod head;
 mod paths;
-use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text, find_identifiers, find_import_statements, HashableNode};
+use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text, find_identifiers, find_import_statements};
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
 
@@ -92,11 +91,10 @@ fn main() {
 
                 let import_statements = identifiers.iter()
                     .flat_map(|identifier| find_import_statements(&language, &root_node, text_provider, &identifier))
-                    // .map(|node| node.node)
-                    .collect::<HashSet<HashableNode>>()
+                    .collect::<HashSet<Node>>()
                     .iter()
-                    .map(|node| node.node)
-                    .collect();
+                    .cloned()
+                    .collect::<Vec<Node>>();
 
                 let head_text = build_head_text(
                     &head_jsx_element,
@@ -104,13 +102,10 @@ fn main() {
                     text_provider,
                 );
 
-                println!("{}", head_text);
-
                 let mut head_file = File::create(&path_dto.new_head_path).unwrap();
 
                 head_file.write_all(head_text.as_bytes()).unwrap();
             }
-                
         }
     }
 }

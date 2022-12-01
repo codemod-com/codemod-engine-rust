@@ -1,4 +1,4 @@
-use std::{ops::Range, collections::HashSet, hash::Hasher};
+use std::{ops::Range, collections::HashSet};
 
 use tree_sitter::{Query, QueryCursor, Node, Language};
 
@@ -78,20 +78,6 @@ pub fn find_head_jsx_elements<'a>(
     }).collect::<Vec<Node>>();
 
     nodes
-
-    // let head_text = build_head_text(&child_nodes, text_provider);
-
-    // println!("{}", head_text);
-
-    // for child_node in child_nodes {
-    //     let identifiers = find_identifiers(
-    //         language,
-    //         &child_node,
-    //         text_provider,
-    //     );
-
-    //     println!("{:#?}", identifiers);
-    // }
 }
 
 pub fn find_identifiers(
@@ -115,33 +101,12 @@ pub fn find_identifiers(
     identifiers
 }
 
-// #[derive(Hash, PartialEq, Eq)]
-pub struct HashableNode <'a>{
-    pub node: Node<'a>,
-}
-
-impl PartialEq for HashableNode<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.node.id() == other.node.id()
-    }
-}
-
-impl Eq for HashableNode<'_>  {}
-
-use std::hash::Hash;
-
-impl Hash for HashableNode<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.node.hash(state);
-    }
-}
-
 pub fn find_import_statements<'a>(
     language: &Language,
     node: &Node<'a>,
     text: &[u8],
     identifier: &String,
-) -> Vec<HashableNode<'a>> {
+) -> Vec<Node<'a>> {
     let source = r#"(
         (import_statement
             (import_clause
@@ -171,9 +136,8 @@ pub fn find_import_statements<'a>(
     let nodes = query_matches.flat_map(|query_match| {
         return query_match
             .nodes_for_capture_index(import_statement_index)
-            .map(|node| HashableNode { node })
-            .collect::<Vec<HashableNode>>();
-    }).collect::<Vec<HashableNode>>();
+            .collect::<Vec<Node>>();
+    }).collect::<Vec<Node>>();
 
     nodes
 }
