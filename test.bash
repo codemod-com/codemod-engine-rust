@@ -1,1 +1,0 @@
-./target/release/nora-rust-engine -d "/gppd/intuita/terraform-website" -p "**/pages" -a "**/node_modules/**/*" -o "/gppd/intuita/test"

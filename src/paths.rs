@@ -78,9 +78,6 @@ pub fn build_path_dto (
         extension,
     );
 
-    dbg!(&page_output_path);
-    dbg!(&head_output_path);
-
     return PathDto {
         old_path,
         new_page_path,
