@@ -1,4 +1,4 @@
-use std::{ops::Range, collections::HashSet};
+use std::{ops::Range, collections::HashSet, hash::Hasher};
 
 use tree_sitter::{Query, QueryCursor, Node, Language};
 
@@ -115,12 +115,33 @@ pub fn find_identifiers(
     identifiers
 }
 
+// #[derive(Hash, PartialEq, Eq)]
+pub struct HashableNode <'a>{
+    pub node: Node<'a>,
+}
+
+impl PartialEq for HashableNode<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.node.id() == other.node.id()
+    }
+}
+
+impl Eq for HashableNode<'_>  {}
+
+use std::hash::Hash;
+
+impl Hash for HashableNode<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.node.hash(state);
+    }
+}
+
 pub fn find_import_statements<'a>(
     language: &Language,
     node: &Node<'a>,
     text: &[u8],
     identifier: &String,
-) -> Vec<Node<'a>> {
+) -> Vec<HashableNode<'a>> {
     let source = r#"(
         (import_statement
             (import_clause
@@ -150,8 +171,9 @@ pub fn find_import_statements<'a>(
     let nodes = query_matches.flat_map(|query_match| {
         return query_match
             .nodes_for_capture_index(import_statement_index)
-            .collect::<Vec<Node>>();
-    }).collect::<Vec<Node>>();
+            .map(|node| HashableNode { node })
+            .collect::<Vec<HashableNode>>();
+    }).collect::<Vec<HashableNode>>();
 
     nodes
 }
