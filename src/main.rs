@@ -3,42 +3,17 @@ use std::io::{Read, Write};
 use std::{path::PathBuf, fs::File};
 
 use clap::Parser;
+use command_line_arguments::CommandLineArguments;
 use json::object;
 use wax::{Glob, Pattern, CandidatePath};
 
+mod command_line_arguments;
 mod tree;
 mod head;
 mod paths;
 use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text};
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
-
-#[derive(Debug, Parser)]
-pub(crate) struct CommandLineArguments {
-    /// Pass the directory path
-    #[clap(short = 'd', long)]
-    pub(crate) directory: String,
-
-    /// Pass the glob pattern for file paths
-    #[clap(short = 'p', long)]
-    pub(crate) pattern: String,
-
-    /// Pass the glob antipattern for file paths
-    #[clap(short = 'a', long)]
-    pub(crate) antipatterns: Vec<String>,
-    
-    /// Pass the group(s) of codemods for execution
-    #[clap(short = 'g', long)]
-    pub(crate) group: Vec<String>,
-
-    /// Pass the limit for the number of files to inspect
-    #[clap(short = 'l', long)]
-    pub(crate) limit: Option<u64>,
-
-    /// Pass the limit for the number of files to inspect
-    #[clap(short = 'o', long)]
-    pub(crate) output_directory_path: Option<String>,
-}
 
 fn build_path_bufs(
     directory: &String,
