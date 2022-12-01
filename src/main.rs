@@ -55,7 +55,10 @@ fn main() {
     let language = tree_sitter_typescript::language_tsx();
 
     for old_path_buf in page_path_bufs {
-        let path_dto = build_path_dto(old_path_buf);
+        let path_dto = build_path_dto(
+            &command_line_arguments.directory,
+            old_path_buf
+        );
 
         let old_file = File::open(&path_dto.old_path).unwrap();
 
@@ -94,7 +97,8 @@ fn main() {
 
             let create_message = object! {
                 k: 4,
-                o: path_dto.new_head_path,
+                p: path_dto.new_head_path,
+                o: path_dto.page_output_path,
                 c: "nextjs"
             };
     

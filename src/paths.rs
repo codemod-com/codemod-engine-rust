@@ -1,4 +1,4 @@
-use std::{path::PathBuf, ffi::OsStr};
+use std::{path::PathBuf, ffi::OsStr, collections::hash_map::DefaultHasher, hash::Hasher};
 
 fn build_new_path_buf (
     old_path_buf: &PathBuf,
@@ -24,19 +24,19 @@ fn build_new_path_buf (
 
 pub struct PathDto {
     pub old_path: String,
-    pub new_dir_path: String,
     pub new_page_path: String,
     pub new_head_path: String,
+    pub page_output_path: String,
 }
 
 pub fn build_path_dto (
+    output_directory_path: &String,
     old_path_buf: PathBuf,
 ) -> PathDto {
     let extension = old_path_buf.extension().unwrap_or_default().to_str().unwrap();
     
     let new_path_buf = build_new_path_buf(&old_path_buf);
 
-    let new_dir_path_buf = new_path_buf.clone();
 
     let mut new_page_path_buf = new_path_buf.clone();
     new_page_path_buf.push(String::from("page.") + extension);
@@ -46,15 +46,23 @@ pub fn build_path_dto (
 
     let old_path = old_path_buf.to_str().unwrap().to_string();
 
-    let new_dir_path = new_dir_path_buf.to_str().unwrap().to_string();
     let new_page_path = new_page_path_buf.to_str().unwrap().to_string();
     let new_head_path = new_head_path_buf.to_str().unwrap().to_string();
 
+    let mut hasher = DefaultHasher::new();
+    hasher.write(new_page_path.as_bytes());
+    let hash = hasher.finish();
+
+    let file_name = format!("{:x}.{}", hash, extension);
+
+    let page_output_path_buf: PathBuf = [output_directory_path, &file_name].iter().collect();
+    let page_output_path = page_output_path_buf.to_str().unwrap().to_string();
+
     return PathDto {
         old_path,
-        new_dir_path,
         new_page_path,
         new_head_path,
+        page_output_path,
     }
     
 }    

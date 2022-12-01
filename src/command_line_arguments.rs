@@ -24,5 +24,5 @@ pub(crate) struct CommandLineArguments {
 
     /// Pass the limit for the number of files to inspect
     #[clap(short = 'o', long)]
-    pub(crate) output_directory_path: Option<String>,
+    pub(crate) output_directory_path: String,
 }
