@@ -1,6 +1,6 @@
-use std::{ops::Range, collections::HashSet};
+use std::{collections::HashSet, ops::Range};
 
-use tree_sitter::{Query, QueryCursor, Node, Language};
+use tree_sitter::{Language, Node, Query, QueryCursor};
 
 #[derive(Debug)]
 pub struct NextHeadImportStatement {
@@ -24,7 +24,8 @@ pub fn find_next_head_import_statements(
                 (#eq? @source "'next/head'") 
             )
         )"#,
-      ).unwrap();
+    )
+    .unwrap();
 
     let identifier_index = query.capture_index_for_name("identifier").unwrap();
 
@@ -32,15 +33,17 @@ pub fn find_next_head_import_statements(
 
     let query_matches = query_cursor.matches(&query, *root_node, text_provider);
 
-    return query_matches.flat_map(|query_match| {
-        return query_match
-            .nodes_for_capture_index(identifier_index)
-            .map(|node| NextHeadImportStatement {
-                identifier_range: node.byte_range(),
-                identifier_text: node.utf8_text(text_provider).unwrap().to_string(),
-            } )
-            .collect::<Vec<NextHeadImportStatement>>();
-    }).collect::<Vec<NextHeadImportStatement>>();
+    return query_matches
+        .flat_map(|query_match| {
+            return query_match
+                .nodes_for_capture_index(identifier_index)
+                .map(|node| NextHeadImportStatement {
+                    identifier_range: node.byte_range(),
+                    identifier_text: node.utf8_text(text_provider).unwrap().to_string(),
+                })
+                .collect::<Vec<NextHeadImportStatement>>();
+        })
+        .collect::<Vec<NextHeadImportStatement>>();
 }
 
 pub fn find_head_jsx_elements<'a>(
@@ -60,10 +63,7 @@ pub fn find_head_jsx_elements<'a>(
 
     let source = source.replace("@_name", &statement.identifier_text);
 
-    let query = Query::new(
-        *language,
-        &source,
-    ).unwrap();
+    let query = Query::new(*language, &source).unwrap();
 
     let jsx_element_index = query.capture_index_for_name("jsx_element").unwrap();
 
@@ -71,24 +71,19 @@ pub fn find_head_jsx_elements<'a>(
 
     let query_matches = query_cursor.matches(&query, *root_node, text_provider);
 
-    let nodes = query_matches.flat_map(|query_match| {
-        return query_match
-            .nodes_for_capture_index(jsx_element_index)
-            .collect::<Vec<Node>>();
-    }).collect::<Vec<Node>>();
+    let nodes = query_matches
+        .flat_map(|query_match| {
+            return query_match
+                .nodes_for_capture_index(jsx_element_index)
+                .collect::<Vec<Node>>();
+        })
+        .collect::<Vec<Node>>();
 
     nodes
 }
 
-pub fn find_identifiers(
-    language: &Language,
-    node: &Node,
-    text: &[u8],
-) -> HashSet<String> {
-    let query = Query::new(
-        *language,
-        r#"((identifier)* @identifier)"#,
-    ).unwrap();
+pub fn find_identifiers(language: &Language, node: &Node, text: &[u8]) -> HashSet<String> {
+    let query = Query::new(*language, r#"((identifier)* @identifier)"#).unwrap();
 
     let mut query_cursor = QueryCursor::new();
 
@@ -122,10 +117,7 @@ pub fn find_import_statements<'a>(
 
     let source = source.replace("@_name", identifier);
 
-    let query = Query::new(
-        *language,
-        &source,
-    ).unwrap();
+    let query = Query::new(*language, &source).unwrap();
 
     let import_statement_index = query.capture_index_for_name("import_statement").unwrap();
 
@@ -133,20 +125,18 @@ pub fn find_import_statements<'a>(
 
     let query_matches = query_cursor.matches(&query, *node, text);
 
-    let nodes = query_matches.flat_map(|query_match| {
-        return query_match
-            .nodes_for_capture_index(import_statement_index)
-            .collect::<Vec<Node>>();
-    }).collect::<Vec<Node>>();
+    let nodes = query_matches
+        .flat_map(|query_match| {
+            return query_match
+                .nodes_for_capture_index(import_statement_index)
+                .collect::<Vec<Node>>();
+        })
+        .collect::<Vec<Node>>();
 
     nodes
 }
 
-pub fn build_head_text(
-    head_node: &Node,
-    import_statements: &Vec<Node>,
-    source: &[u8],
-) -> String {
+pub fn build_head_text(head_node: &Node, import_statements: &Vec<Node>, source: &[u8]) -> String {
     let mut string: String = String::new();
 
     for import_statement in import_statements {

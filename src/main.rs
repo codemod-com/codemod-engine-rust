@@ -1,39 +1,38 @@
-use std::io::{Read, Write, BufReader};
-use std::{path::PathBuf, fs::File};
+use std::io::{BufReader, Read, Write};
+use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use command_line_arguments::CommandLineArguments;
 use head_file::build_head_file_text;
 use json::object;
-use wax::{Glob, Pattern, CandidatePath};
+use wax::{CandidatePath, Glob, Pattern};
 
 mod command_line_arguments;
-mod tree;
 mod head;
-mod paths;
-mod page_file;
 mod head_file;
+mod page_file;
+mod paths;
+mod tree;
 
 use crate::page_file::build_page_file_text;
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
 
-fn build_path_bufs(
-    directory: &String,
-    pattern: &String,
-    antipatterns: &Vec<Glob>,
-) -> Vec<PathBuf> {
+fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
     let glob = Glob::new(&pattern).unwrap();
 
-    return glob.walk(directory)
+    return glob
+        .walk(directory)
         .map(|walk_entry| walk_entry.unwrap())
-        .map(|entry|  {
+        .map(|entry| {
             return entry.into_path();
         })
         .filter(|path| {
             let path = path.as_path();
 
-            return !antipatterns.iter().any(|ap| ap.is_match(CandidatePath::from(path)));
+            return !antipatterns
+                .iter()
+                .any(|ap| ap.is_match(CandidatePath::from(path)));
         })
         .collect::<Vec<PathBuf>>();
 }
@@ -41,7 +40,8 @@ fn build_path_bufs(
 fn main() {
     let command_line_arguments = CommandLineArguments::parse();
 
-    let antipatterns: Vec<Glob> = command_line_arguments.antipatterns
+    let antipatterns: Vec<Glob> = command_line_arguments
+        .antipatterns
         .iter()
         .map(|p| Glob::new(p).unwrap())
         .collect();
@@ -55,16 +55,13 @@ fn main() {
     let language = tree_sitter_typescript::language_tsx();
 
     for old_path_buf in page_path_bufs {
-        let path_dto = build_path_dto(
-            &command_line_arguments.output_directory_path,
-            old_path_buf
-        );
+        let path_dto = build_path_dto(&command_line_arguments.output_directory_path, old_path_buf);
 
         let old_file = File::open(&path_dto.old_path).unwrap();
 
         let mut reader = BufReader::new(old_file);
         let mut buffer = Vec::new();
-    
+
         reader.read_to_end(&mut buffer).unwrap();
 
         let tree = build_tree(&language, &buffer);
@@ -84,7 +81,7 @@ fn main() {
                 o: path_dto.page_output_path,
                 c: "nextjs"
             };
-    
+
             println!("{}", json::stringify(update));
         }
 
@@ -101,7 +98,7 @@ fn main() {
                 o: path_dto.head_output_path,
                 c: "nextjs"
             };
-    
+
             println!("{}", json::stringify(create_message));
         }
     }

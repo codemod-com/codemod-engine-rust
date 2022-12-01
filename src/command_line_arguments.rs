@@ -13,7 +13,7 @@ pub(crate) struct CommandLineArguments {
     /// Pass the glob antipattern for file paths
     #[clap(short = 'a', long)]
     pub(crate) antipatterns: Vec<String>,
-    
+
     /// Pass the group(s) of codemods for execution
     #[clap(short = 'g', long)]
     pub(crate) group: Vec<String>,
