@@ -9,11 +9,12 @@ pub struct NextHeadImportStatement {
 }
 
 pub fn find_next_head_import_statements(
+    language: &Language,
     root_node: &Node,
     text_provider: &[u8],
 ) -> Vec<NextHeadImportStatement> {
     let query = Query::new(
-        tree_sitter_typescript::language_tsx(),
+        *language,
         r#"(
             (import_statement
                 (import_clause 
@@ -43,6 +44,7 @@ pub fn find_next_head_import_statements(
 }
 
 pub fn find_head_jsx_element_children(
+    language: &Language,
     root_node: &Node,
     text_provider: &[u8],
     statement: &NextHeadImportStatement,
@@ -88,12 +90,20 @@ pub fn find_head_jsx_element_children(
     }
 
     for child_node in child_nodes {
-        
+        let Range { start, end } = child_node.byte_range();
+
+        let identifiers = find_identifiers(
+            language,
+            &child_node,
+            &text_provider[start..end],
+        );
+
+        println!("{:#?}", identifiers);
     }
 }
 
 pub fn find_identifiers(
-    language: Language,
+    language: &Language,
     node: &Node,
     text: &[u8],
 ) -> HashSet<String> {
@@ -102,7 +112,7 @@ pub fn find_identifiers(
     )"#;
 
     let query = Query::new(
-        language,
+        *language,
         source,
     ).unwrap();
 

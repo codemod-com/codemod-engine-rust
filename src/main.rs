@@ -124,14 +124,16 @@ fn main() {
 
         println!("{}", json::stringify(rewrite_message));
 
-        let tree = build_tree(&buffer);
+        let language = tree_sitter_typescript::language_tsx();
+
+        let tree = build_tree(&language, &buffer);
         let root_node = tree.root_node();
         let text_provider = buffer.as_bytes();
 
-        let statements = find_next_head_import_statements(&root_node, text_provider);
+        let statements = find_next_head_import_statements(&language, &root_node, text_provider);
 
         for statement in statements {
-            find_head_jsx_element_children(&root_node, text_provider, &statement);
+            find_head_jsx_element_children(&language, &root_node, text_provider, &statement);
         }
     }
 }
