@@ -75,14 +75,14 @@ fn main() {
 
             file.write_all(page_file_text).unwrap();
 
-            let rewrite_message = object! {
+            let update = object! {
                 k: 3,
                 i: path_dto.old_path,
                 o: path_dto.new_page_path,
                 c: "nextjs"
             };
     
-            println!("{}", json::stringify(rewrite_message));
+            println!("{}", json::stringify(update));
         }
 
         let head_file_text_option = build_head_file_text(&language, &root_node, bytes);
@@ -91,6 +91,14 @@ fn main() {
             let mut file = File::create(&path_dto.new_head_path).unwrap();
 
             file.write_all(head_file_text.as_bytes()).unwrap();
+
+            let create_message = object! {
+                k: 4,
+                o: path_dto.new_head_path,
+                c: "nextjs"
+            };
+    
+            println!("{}", json::stringify(create_message));
         }
     }
 }
