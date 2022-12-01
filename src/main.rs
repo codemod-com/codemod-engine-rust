@@ -8,7 +8,7 @@ use wax::{Glob, Pattern, CandidatePath};
 
 mod tree;
 mod head;
-use crate::head::find_head;
+use crate::head::find_next_head_import_statements;
 use crate::tree::build_tree;
 
 #[derive(Debug, Parser)]
@@ -126,6 +126,6 @@ fn main() {
 
         let tree = build_tree(&buffer);
 
-        find_head(&tree, &buffer.as_bytes());
+        find_next_head_import_statements(&tree, &buffer.as_bytes());
     }
 }

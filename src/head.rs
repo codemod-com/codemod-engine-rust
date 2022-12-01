@@ -1,9 +1,15 @@
+use std::ops::Range;
+
 use tree_sitter::{Tree, Query, QueryCursor};
 
-pub fn find_head(
+pub struct NextHeadImportStatement {
+    identifier_range: Range<usize>,
+}
+
+pub fn find_next_head_import_statements(
     tree: &Tree,
     text_provider: &[u8],
-) {
+) -> Vec<NextHeadImportStatement> {
     let query = Query::new(
         tree_sitter_typescript::language_typescript(),
         r#"(
@@ -17,25 +23,16 @@ pub fn find_head(
         )"#,
       ).unwrap();
 
-    dbg!(query.capture_names());
+    let identifier_index = query.capture_index_for_name("identifier").unwrap();
 
     let mut query_cursor = QueryCursor::new();
 
     let query_matches = query_cursor.matches(&query, tree.root_node(), text_provider);
 
-    for query_match in query_matches {
-        dbg!(query_match.pattern_index);
-
-        for capture in query_match.captures {
-            dbg!(capture.index);
-            let nbr = capture.node.byte_range();
-
-            dbg!("{:#?}", nbr);
-            let node_text = capture.node.utf8_text(text_provider).unwrap();
-
-            dbg!(node_text);
-            // let bytes = &text_provider[(psbr.end+1)..(nbr.start-1)];
-            // let _rep = String::from_utf8_lossy(bytes);
-        }
-    }
+    return query_matches.flat_map(|query_match| {
+        return query_match
+            .nodes_for_capture_index(identifier_index)
+            .map(|node| NextHeadImportStatement { identifier_range: node.byte_range() } )
+            .collect::<Vec<NextHeadImportStatement>>();
+    }).collect::<Vec<NextHeadImportStatement>>();
 }
