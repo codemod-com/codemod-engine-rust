@@ -115,6 +115,44 @@ pub fn find_identifiers(
     identifiers
 }
 
+pub fn find_import_statements<'a>(
+    language: &Language,
+    node: &Node<'a>,
+    text: &[u8],
+    identifier: &String,
+) -> Vec<Node<'a>> {
+    let source = r#"(
+        (import_statement
+            (import_clause
+                (named_imports
+                    (import_specifier
+                        name: (identifier) @name
+                        (#eq? @name "@_name")
+                    )
+                )
+            )
+        )* @import_statement
+    )"#;
+
+    let source = source.replace("@_name", identifier);
+
+    let query = Query::new(
+        *language,
+        &source,
+    ).unwrap();
+
+    let mut query_cursor = QueryCursor::new();
+
+    let nodes = query_cursor
+        .captures(&query, *node, text)
+        .flat_map(|m| m.0.captures)
+        .map(|c| c.node)
+        .collect::<Vec<Node>>();
+
+    nodes
+
+}
+
 pub fn build_head_text(
     head_node: &Node,
     source: &[u8],

@@ -11,7 +11,7 @@ mod command_line_arguments;
 mod tree;
 mod head;
 mod paths;
-use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text};
+use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text, find_identifiers, find_import_statements};
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
 
@@ -85,6 +85,18 @@ fn main() {
             let head_jsx_elements = find_head_jsx_elements(&language, &root_node, text_provider, &statement);
 
             for head_jsx_element in head_jsx_elements {
+                let identifiers = find_identifiers(&language, &root_node, text_provider);
+
+                for identifier in identifiers {
+                    let import_statements = find_import_statements(&language, &root_node, text_provider, &identifier);
+
+                    for import_statement in import_statements {
+                        println!("{}", import_statement.utf8_text(text_provider).unwrap())
+                    }
+
+                    
+                }
+
                 let head_text = build_head_text(
                     &head_jsx_element,
                     text_provider,
