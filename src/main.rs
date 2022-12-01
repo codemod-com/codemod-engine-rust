@@ -8,7 +8,7 @@ use wax::{Glob, Pattern, CandidatePath};
 
 mod tree;
 mod head;
-use crate::head::{find_next_head_import_statements, find_head_jsx_element_children};
+use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text};
 use crate::tree::build_tree;
 
 #[derive(Debug, Parser)]
@@ -133,7 +133,17 @@ fn main() {
         let statements = find_next_head_import_statements(&language, &root_node, text_provider);
 
         for statement in statements {
-            find_head_jsx_element_children(&language, &root_node, text_provider, &statement);
+            let head_jsx_elements = find_head_jsx_elements(&language, &root_node, text_provider, &statement);
+
+            for head_jsx_element in head_jsx_elements {
+                let head_text = build_head_text(
+                    &head_jsx_element,
+                    text_provider,
+                );
+
+                println!("{}", head_text);
+            }
+                
         }
     }
 }

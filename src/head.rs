@@ -43,12 +43,12 @@ pub fn find_next_head_import_statements(
     }).collect::<Vec<NextHeadImportStatement>>();
 }
 
-pub fn find_head_jsx_element_children(
+pub fn find_head_jsx_elements<'a>(
     language: &Language,
-    root_node: &Node,
+    root_node: &Node<'a>,
     text_provider: &[u8],
     statement: &NextHeadImportStatement,
-) {
+) -> Vec<Node<'a>> {
     let source = r#"(
         (jsx_element
             open_tag: (jsx_opening_element
@@ -61,7 +61,7 @@ pub fn find_head_jsx_element_children(
     let source = source.replace("@_name", &statement.identifier_text);
 
     let query = Query::new(
-        tree_sitter_typescript::language_tsx(),
+        *language,
         &source,
     ).unwrap();
 
@@ -71,37 +71,44 @@ pub fn find_head_jsx_element_children(
 
     let query_matches = query_cursor.matches(&query, *root_node, text_provider);
 
-    let mut child_nodes = Vec::<Node>::new();
+    let nodes = query_matches.flat_map(|query_match| {
+        return query_match
+            .nodes_for_capture_index(jsx_element_index)
+            .collect::<Vec<Node>>();
+    }).collect::<Vec<Node>>();
 
-    for query_match in query_matches {
-        let nodes = query_match.nodes_for_capture_index(jsx_element_index);
+    nodes
 
-        nodes.for_each(|node| {
-            let child_count = node.child_count();
+    // let mut child_nodes = Vec::<Node>::new();
+    // for query_match in query_matches {
+    //     let nodes = query_match.nodes_for_capture_index(jsx_element_index);
 
-            for i in 0..child_count {
-                if i == 0 || i == (child_count - 1) {
-                    continue;
-                }
+    //     nodes.for_each(|node| {
+    //         let child_count = node.child_count();
 
-                child_nodes.push(node.child(i).unwrap());
-            }
-        });
-    }
+    //         for i in 0..child_count {
+    //             if i == 0 || i == (child_count - 1) {
+    //                 continue;
+    //             }
 
-    let head_text = build_head_text(&child_nodes, text_provider);
+    //             child_nodes.push(node.child(i).unwrap());
+    //         }
+    //     });
+    // }
 
-    println!("{}", head_text);
+    // let head_text = build_head_text(&child_nodes, text_provider);
 
-    for child_node in child_nodes {
-        let identifiers = find_identifiers(
-            language,
-            &child_node,
-            text_provider,
-        );
+    // println!("{}", head_text);
 
-        println!("{:#?}", identifiers);
-    }
+    // for child_node in child_nodes {
+    //     let identifiers = find_identifiers(
+    //         language,
+    //         &child_node,
+    //         text_provider,
+    //     );
+
+    //     println!("{:#?}", identifiers);
+    // }
 }
 
 pub fn find_identifiers(
@@ -126,7 +133,7 @@ pub fn find_identifiers(
 }
 
 pub fn build_head_text(
-    children: &Vec<Node>,
+    head_node: &Node,
     source: &[u8],
 ) -> String {
     let mut string: String = String::new();
@@ -134,8 +141,15 @@ pub fn build_head_text(
     string.push_str("export default async function Head() {\n");
     string.push_str("return (<>\n");
 
-    for child in children {
-        let text = child.utf8_text(source).unwrap();
+    let child_count = head_node.child_count();
+
+    for i in 0..child_count {
+        if i == 0 || i == (child_count - 1) {
+            continue;
+        }
+
+        let child_node = head_node.child(i).unwrap();
+        let text = child_node.utf8_text(source).unwrap();
 
         string.push_str(text);
     }
