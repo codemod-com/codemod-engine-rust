@@ -141,23 +141,34 @@ pub fn find_import_statements<'a>(
         &source,
     ).unwrap();
 
+    let import_statement_index = query.capture_index_for_name("import_statement").unwrap();
+
     let mut query_cursor = QueryCursor::new();
 
-    let nodes = query_cursor
-        .captures(&query, *node, text)
-        .flat_map(|m| m.0.captures)
-        .map(|c| c.node)
-        .collect::<Vec<Node>>();
+    let query_matches = query_cursor.matches(&query, *node, text);
+
+    let nodes = query_matches.flat_map(|query_match| {
+        return query_match
+            .nodes_for_capture_index(import_statement_index)
+            .collect::<Vec<Node>>();
+    }).collect::<Vec<Node>>();
 
     nodes
-
 }
 
 pub fn build_head_text(
     head_node: &Node,
+    import_statements: &Vec<Node>,
     source: &[u8],
 ) -> String {
     let mut string: String = String::new();
+
+    for import_statement in import_statements {
+        let text = import_statement.utf8_text(source).unwrap();
+
+        string.push_str(text);
+        string.push('\n');
+    }
 
     string.push_str("export default async function Head() {\n");
     string.push_str("return (<>\n");

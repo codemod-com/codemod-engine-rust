@@ -5,6 +5,7 @@ use std::{path::PathBuf, fs::File};
 use clap::Parser;
 use command_line_arguments::CommandLineArguments;
 use json::object;
+use tree_sitter::Node;
 use wax::{Glob, Pattern, CandidatePath};
 
 mod command_line_arguments;
@@ -87,18 +88,13 @@ fn main() {
             for head_jsx_element in head_jsx_elements {
                 let identifiers = find_identifiers(&language, &root_node, text_provider);
 
-                for identifier in identifiers {
-                    let import_statements = find_import_statements(&language, &root_node, text_provider, &identifier);
-
-                    for import_statement in import_statements {
-                        println!("{}", import_statement.utf8_text(text_provider).unwrap())
-                    }
-
-                    
-                }
+                let import_statements = identifiers.iter()
+                    .flat_map(|identifier| find_import_statements(&language, &root_node, text_provider, &identifier))
+                    .collect::<Vec<Node>>();
 
                 let head_text = build_head_text(
                     &head_jsx_element,
+                    &import_statements,
                     text_provider,
                 );
 

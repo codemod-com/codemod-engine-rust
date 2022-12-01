@@ -39,10 +39,10 @@ pub fn build_path_dto (
     let new_dir_path_buf = new_path_buf.clone();
 
     let mut new_page_path_buf = new_path_buf.clone();
-    new_page_path_buf.push(String::from("page") + extension);
+    new_page_path_buf.push(String::from("page.") + extension);
 
     let mut new_head_path_buf = new_path_buf.clone();    
-    new_head_path_buf.push(String::from("head") + extension);
+    new_head_path_buf.push(String::from("head.") + extension);
 
     let old_path = old_path_buf.to_str().unwrap().to_string();
 
