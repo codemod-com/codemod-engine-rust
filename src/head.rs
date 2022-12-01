@@ -89,6 +89,10 @@ pub fn find_head_jsx_element_children(
         });
     }
 
+    let head_text = build_head_text(&child_nodes, text_provider);
+
+    println!("{}", head_text);
+
     for child_node in child_nodes {
         let identifiers = find_identifiers(
             language,
@@ -119,4 +123,25 @@ pub fn find_identifiers(
         .collect::<HashSet<String>>();
 
     identifiers
+}
+
+pub fn build_head_text(
+    children: &Vec<Node>,
+    source: &[u8],
+) -> String {
+    let mut string: String = String::new();
+
+    string.push_str("export default async function Head() {\n");
+    string.push_str("return (<>\n");
+
+    for child in children {
+        let text = child.utf8_text(source).unwrap();
+
+        string.push_str(text);
+    }
+
+    string.push_str("<>);\n");
+    string.push_str("}\n");
+
+    string
 }
