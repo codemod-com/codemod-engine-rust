@@ -1,11 +1,10 @@
-use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::{path::PathBuf, fs::File};
 
 use clap::Parser;
 use command_line_arguments::CommandLineArguments;
+use head_file::build_head_file_text;
 use json::object;
-use tree_sitter::Node;
 use wax::{Glob, Pattern, CandidatePath};
 
 mod command_line_arguments;
@@ -13,7 +12,8 @@ mod tree;
 mod head;
 mod paths;
 mod page_file;
-use crate::head::{find_next_head_import_statements, find_head_jsx_elements, build_head_text, find_identifiers, find_import_statements};
+mod head_file;
+
 use crate::page_file::build_page_file_text;
 use crate::paths::build_path_dto;
 use crate::tree::build_tree;
@@ -52,61 +52,44 @@ fn main() {
         &antipatterns,
     );
 
+    let language = tree_sitter_typescript::language_tsx();
+
     for old_path_buf in page_path_bufs {
         let path_dto = build_path_dto(old_path_buf);
 
         let mut old_file = File::open(&path_dto.old_path).unwrap();
 
-        let mut new_file = File::create(&path_dto.new_page_path).unwrap();
-
         let mut buffer = String::new();
 
         old_file.read_to_string(&mut buffer).unwrap();
-
-        new_file.write_all(buffer.as_bytes()).unwrap();
-
-        let rewrite_message = object! {
-            k: 3,
-            i: path_dto.old_path,
-            o: path_dto.new_page_path,
-            c: "nextjs"
-        };
-
-        println!("{}", json::stringify(rewrite_message));
-
-        let language = tree_sitter_typescript::language_tsx();
 
         let tree = build_tree(&language, &buffer);
         let root_node = tree.root_node();
         let bytes = buffer.as_bytes();
 
-        let page_file_text = build_page_file_text(&root_node, bytes);
+        {
+            let page_file_text = build_page_file_text(&language, &root_node, bytes);
 
-        let statements = find_next_head_import_statements(&language, &root_node, bytes);
+            let mut file = File::create(&path_dto.new_page_path).unwrap();
 
-        for statement in statements {
-            let head_jsx_elements = find_head_jsx_elements(&language, &root_node, bytes, &statement);
+            file.write_all(page_file_text).unwrap();
 
-            for head_jsx_element in head_jsx_elements {
-                let identifiers = find_identifiers(&language, &root_node, bytes);
+            let rewrite_message = object! {
+                k: 3,
+                i: path_dto.old_path,
+                o: path_dto.new_page_path,
+                c: "nextjs"
+            };
+    
+            println!("{}", json::stringify(rewrite_message));
+        }
 
-                let import_statements = identifiers.iter()
-                    .flat_map(|identifier| find_import_statements(&language, &root_node, bytes, &identifier))
-                    .collect::<HashSet<Node>>()
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<Node>>();
+        let head_file_text_option = build_head_file_text(&language, &root_node, bytes);
 
-                let head_text = build_head_text(
-                    &head_jsx_element,
-                    &import_statements,
-                    bytes,
-                );
+        if let Some(head_file_text) = head_file_text_option {
+            let mut file = File::create(&path_dto.new_head_path).unwrap();
 
-                let mut head_file = File::create(&path_dto.new_head_path).unwrap();
-
-                head_file.write_all(head_text.as_bytes()).unwrap();
-            }
+            file.write_all(head_file_text.as_bytes()).unwrap();
         }
     }
 }
