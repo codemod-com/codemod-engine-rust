@@ -1,6 +1,6 @@
-use std::ops::Range;
+use std::{ops::Range, collections::HashSet};
 
-use tree_sitter::{Query, QueryCursor, Node};
+use tree_sitter::{Query, QueryCursor, Node, Language};
 
 #[derive(Debug)]
 pub struct NextHeadImportStatement {
@@ -86,4 +86,33 @@ pub fn find_head_jsx_element_children(
             }
         });
     }
+
+    for child_node in child_nodes {
+        
+    }
+}
+
+pub fn find_identifiers(
+    language: Language,
+    node: &Node,
+    text: &[u8],
+) -> HashSet<String> {
+    let source = r#"(
+        (identifier)* @identifier
+    )"#;
+
+    let query = Query::new(
+        language,
+        source,
+    ).unwrap();
+
+    let mut query_cursor = QueryCursor::new();
+
+    let identifiers = query_cursor
+        .captures(&query, *node, text)
+        .flat_map(|m| m.0.captures)
+        .map(|c| c.node.utf8_text(text).unwrap().to_string())
+        .collect::<HashSet<String>>();
+
+    identifiers
 }
