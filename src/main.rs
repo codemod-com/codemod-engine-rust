@@ -79,9 +79,9 @@ fn main() {
             file.write_all(page_file_text).unwrap();
 
             let update = object! {
-                k: 3,
-                i: path_dto.old_path,
-                o: path_dto.new_page_path,
+                k: 4,
+                p: path_dto.new_page_path,
+                o: path_dto.page_output_path,
                 c: "nextjs"
             };
     
@@ -98,7 +98,7 @@ fn main() {
             let create_message = object! {
                 k: 4,
                 p: path_dto.new_head_path,
-                o: path_dto.page_output_path,
+                o: path_dto.head_output_path,
                 c: "nextjs"
             };
     
