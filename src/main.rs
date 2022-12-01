@@ -56,7 +56,7 @@ fn main() {
 
     for old_path_buf in page_path_bufs {
         let path_dto = build_path_dto(
-            &command_line_arguments.directory,
+            &command_line_arguments.output_directory_path,
             old_path_buf
         );
 
@@ -74,7 +74,7 @@ fn main() {
         {
             let page_file_text = build_page_file_text(&language, &root_node, bytes);
 
-            let mut file = File::create(&path_dto.new_page_path).unwrap();
+            let mut file = File::create(&path_dto.page_output_path).unwrap();
 
             file.write_all(page_file_text).unwrap();
 
@@ -91,7 +91,7 @@ fn main() {
         let head_file_text_option = build_head_file_text(&language, &root_node, bytes);
 
         if let Some(head_file_text) = head_file_text_option {
-            let mut file = File::create(&path_dto.new_head_path).unwrap();
+            let mut file = File::create(&path_dto.head_output_path).unwrap();
 
             file.write_all(head_file_text.as_bytes()).unwrap();
 

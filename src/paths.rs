@@ -27,6 +27,23 @@ pub struct PathDto {
     pub new_page_path: String,
     pub new_head_path: String,
     pub page_output_path: String,
+    pub head_output_path: String,
+}
+
+fn build_output_path (
+    output_directory_path: &String,
+    new_page_path: &String,
+    extension: &str,
+) -> String {
+    let mut hasher = DefaultHasher::new();
+    hasher.write(new_page_path.as_bytes());
+    let hash = hasher.finish();
+
+    let file_name = format!("{:x}.{}", hash, extension);
+
+    let output_path_buf: PathBuf = [output_directory_path, &file_name].iter().collect();
+    
+    output_path_buf.to_str().unwrap().to_string()
 }
 
 pub fn build_path_dto (
@@ -49,20 +66,27 @@ pub fn build_path_dto (
     let new_page_path = new_page_path_buf.to_str().unwrap().to_string();
     let new_head_path = new_head_path_buf.to_str().unwrap().to_string();
 
-    let mut hasher = DefaultHasher::new();
-    hasher.write(new_page_path.as_bytes());
-    let hash = hasher.finish();
+    let page_output_path = build_output_path(
+        output_directory_path,
+        &new_page_path,
+        extension,
+    );
 
-    let file_name = format!("{:x}.{}", hash, extension);
+    let head_output_path = build_output_path(
+        output_directory_path,
+        &new_head_path,
+        extension,
+    );
 
-    let page_output_path_buf: PathBuf = [output_directory_path, &file_name].iter().collect();
-    let page_output_path = page_output_path_buf.to_str().unwrap().to_string();
+    dbg!(&page_output_path);
+    dbg!(&head_output_path);
 
     return PathDto {
         old_path,
         new_page_path,
         new_head_path,
         page_output_path,
+        head_output_path,
     }
     
 }    
