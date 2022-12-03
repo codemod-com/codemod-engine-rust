@@ -102,4 +102,10 @@ fn main() {
             println!("{}", json::stringify(create_message));
         }
     }
+
+    let finish_message = object! {
+        k: 2,
+    };
+
+    println!("{}", json::stringify(finish_message));
 }
