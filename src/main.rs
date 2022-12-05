@@ -1,5 +1,6 @@
 use std::io::{BufReader, Read, Write};
 use std::path::Path;
+use std::thread;
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
@@ -18,6 +19,7 @@ mod queries;
 
 use crate::page_file::build_page_file_text;
 use crate::paths::{build_path_dto, get_pages_path_buf, build_page_document_path_buf_option};
+use crate::queries::find_jsx_self_closing_element;
 use crate::tree::build_tree;
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
@@ -67,63 +69,71 @@ fn main() {
 
     let language = tree_sitter_typescript::language_tsx();
 
-    for old_path_buf in &page_path_bufs {
-        let path_dto_option = build_path_dto(&command_line_arguments.output_directory_path, old_path_buf);
-
-        if path_dto_option.is_none() {
-            continue;
-        }
-
-        let path_dto = path_dto_option.unwrap();
-
-        let buffer = read_file(&path_dto.old_path);
-
-        let tree = build_tree(&language, &buffer);
-        let root_node = tree.root_node();
-        let bytes = buffer.as_ref();
-
-        {
-            let page_file_text = build_page_file_text(&language, &root_node, bytes);
-
-            let mut file = File::create(&path_dto.page_output_path).unwrap();
-
-            file.write_all(page_file_text).unwrap();
-
-            let update = object! {
-                k: 4,
-                p: path_dto.new_page_path,
-                o: path_dto.page_output_path,
-                c: "nextjs"
-            };
-
-            println!("{}", json::stringify(update));
-        }
-
-        let head_file_text_option = build_head_file_text(&language, &root_node, bytes);
-
-        if let Some(head_file_text) = head_file_text_option {
-            let mut file = File::create(&path_dto.head_output_path).unwrap();
-
-            file.write_all(head_file_text.as_bytes()).unwrap();
-
-            let create_message = object! {
-                k: 4,
-                p: path_dto.new_head_path,
-                o: path_dto.head_output_path,
-                c: "nextjs"
-            };
-
-            println!("{}", json::stringify(create_message));
-        }
-    }
-
-    // app/layout.tsx
-    let pages_path_buf_option = page_path_bufs
+    let pages_path_buf_option = &page_path_bufs
         .first()
         .and_then(|path_buf| get_pages_path_buf(path_buf));
 
+    let page_path_bufs = page_path_bufs.clone();   
+
+    for old_path_buf in page_path_bufs {
+        // let old_path_buf = old_path_buf.to_owned();
+        let output_directory_path = command_line_arguments.output_directory_path.clone();
+
+        thread::spawn(move || {
+            let path_dto_option = build_path_dto(&output_directory_path, &old_path_buf);
+
+            if path_dto_option.is_none() {
+                return;
+            }
+    
+            let path_dto = path_dto_option.unwrap();
+    
+            let buffer = read_file(&path_dto.old_path);
+    
+            let tree = build_tree(&language, &buffer);
+            let root_node = tree.root_node();
+            let bytes = buffer.as_ref();
+    
+            {
+                let page_file_text = build_page_file_text(&language, &root_node, bytes);
+    
+                let mut file = File::create(&path_dto.page_output_path).unwrap();
+    
+                file.write_all(page_file_text).unwrap();
+    
+                let update = object! {
+                    k: 4,
+                    p: path_dto.new_page_path,
+                    o: path_dto.page_output_path,
+                    c: "nextjs"
+                };
+    
+                println!("{}", json::stringify(update));
+            }
+    
+            let head_file_text_option = build_head_file_text(&language, &root_node, bytes);
+    
+            if let Some(head_file_text) = head_file_text_option {
+                let mut file = File::create(&path_dto.head_output_path).unwrap();
+    
+                file.write_all(head_file_text.as_bytes()).unwrap();
+    
+                let create_message = object! {
+                    k: 4,
+                    p: path_dto.new_head_path,
+                    o: path_dto.head_output_path,
+                    c: "nextjs"
+                };
+    
+                println!("{}", json::stringify(create_message));
+            }
+        });
+    }
+
+    // app/layout.tsx
+
     if let Some(pages_path_buf) = pages_path_buf_option {
-        let page_document_path_buf_option = build_page_document_path_buf_option(pages_path_buf);
+        let page_document_path_buf_option = build_page_document_path_buf_option(pages_path_buf.clone());
 
         if let Some(page_document_path_buf) = page_document_path_buf_option {
             let buffer = read_file(&page_document_path_buf);
@@ -132,7 +142,10 @@ fn main() {
             let root_node = tree.root_node();
             let bytes: &[u8] = buffer.as_ref();
 
-            
+            let script_jsx_elements = find_jsx_self_closing_element(&language, &root_node, bytes, "script");
+
+            dbg!("{}", script_jsx_elements);
+            // continue here
 
         }
 

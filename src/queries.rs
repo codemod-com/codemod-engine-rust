@@ -104,3 +104,25 @@ pub fn find_import_statements<'a>(
 
     return match_nodes(&query, root_node, bytes, capture_index);
 }
+
+pub fn find_jsx_self_closing_element<'a>(
+    language: &Language,
+    root_node: &Node<'a>,
+    bytes: &'a [u8],
+    identifier: &str,
+) -> Vec<Node<'a>> {
+    let source = r#"(
+        (jsx_self_closing_element
+            name: (identifier) @identifier
+             (#eq? @identifier "@_identifier")
+        ) @jsx_self_closing_element
+    )"#;
+
+    let source = source.replace("@_identifier", identifier);
+
+    let query = Query::new(*language, &source).unwrap();
+
+    let capture_index = query.capture_index_for_name("jsx_self_closing_element").unwrap();
+
+    return match_nodes(&query, root_node, bytes, capture_index);
+}
