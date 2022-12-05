@@ -5,8 +5,8 @@ use std::collections::HashSet;
 use tree_sitter::Language;
 
 use crate::{head::{
-    build_head_text, find_import_statements, find_identifiers,
-}, queries::{find_next_head_import_statements, find_head_jsx_elements}};
+    build_head_text, find_import_statements,
+}, queries::{find_next_head_import_statements, find_head_jsx_elements, find_identifiers}};
 
 pub fn build_head_file_text(language: &Language, root_node: &Node, bytes: &[u8]) -> Option<String> {
     let statements = find_next_head_import_statements(&language, &root_node, bytes);

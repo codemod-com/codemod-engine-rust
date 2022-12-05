@@ -61,8 +61,19 @@ pub fn find_head_jsx_elements<'a>(
     let source = source.replace("@_name", &statement.utf8_text(bytes).unwrap());
 
     let query = Query::new(*language, &source).unwrap();
-
     let capture_index = query.capture_index_for_name("jsx_element").unwrap();
 
     return match_nodes(&query, root_node, bytes, capture_index);
 }
+
+pub fn find_identifiers<'a>(
+    language: &Language,
+    root_node: &Node<'a>,
+    bytes: &'a [u8],
+) -> Vec<Node<'a>> {
+    let query = Query::new(*language, r#"((identifier)* @identifier)"#).unwrap();
+    let capture_index = query.capture_index_for_name("identifier").unwrap();
+
+    return match_nodes(&query, root_node, bytes, capture_index);
+}
+   

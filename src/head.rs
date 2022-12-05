@@ -1,26 +1,10 @@
-use std::{collections::HashSet};
-
 use tree_sitter::{Language, Node, Query, QueryCursor};
-
-pub fn find_identifiers(language: &Language, node: &Node, text: &[u8]) -> HashSet<String> {
-    let query = Query::new(*language, r#"((identifier)* @identifier)"#).unwrap();
-
-    let mut query_cursor = QueryCursor::new();
-
-    let identifiers = query_cursor
-        .captures(&query, *node, text)
-        .flat_map(|m| m.0.captures)
-        .map(|c| c.node.utf8_text(text).unwrap().to_string())
-        .collect::<HashSet<String>>();
-
-    identifiers
-}
 
 pub fn find_import_statements<'a>(
     language: &Language,
     node: &Node<'a>,
     text: &[u8],
-    identifier: &String,
+    identifier: &Node,
 ) -> Vec<Node<'a>> {
     let source = r#"(
         (import_statement
@@ -35,7 +19,7 @@ pub fn find_import_statements<'a>(
         )* @import_statement
     )"#;
 
-    let source = source.replace("@_name", identifier);
+    let source = source.replace("@_name", identifier.utf8_text(text).unwrap());
 
     let query = Query::new(*language, &source).unwrap();
 
