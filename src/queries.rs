@@ -76,4 +76,31 @@ pub fn find_identifiers<'a>(
 
     return match_nodes(&query, root_node, bytes, capture_index);
 }
-   
+
+pub fn find_import_statements<'a>(
+    language: &Language,
+    root_node: &Node<'a>,
+    bytes: &'a [u8],
+    identifier: &Node,
+) -> Vec<Node<'a>> {
+    let source = r#"(
+        (import_statement
+            (import_clause
+                (named_imports
+                    (import_specifier
+                        name: (identifier) @name
+                        (#eq? @name "@_name")
+                    )
+                )
+            )
+        )* @import_statement
+    )"#;
+
+    let source = source.replace("@_name", identifier.utf8_text(bytes).unwrap());
+
+    let query = Query::new(*language, &source).unwrap();
+
+    let capture_index = query.capture_index_for_name("import_statement").unwrap();
+
+    return match_nodes(&query, root_node, bytes, capture_index);
+}
