@@ -72,16 +72,24 @@ fn main() {
         .first()
         .and_then(|path_buf| get_pages_path_buf(path_buf));
 
+    let mut handles = Vec::new();
+
     for old_path_buf in page_path_bufs {
         let output_directory_path = command_line_arguments.output_directory_path.clone();
 
-        thread::spawn(move || {
+        let handle = thread::spawn(move || {
             build_page_directory_messages(
                 &output_directory_path,
                 &language,
                 &old_path_buf,
             );
         });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 
     // app/layout.tsx

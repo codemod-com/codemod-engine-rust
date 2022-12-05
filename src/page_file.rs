@@ -1,17 +1,9 @@
 use std::{path::PathBuf, fs::File, io::Write};
 
 use json::object;
-use tree_sitter::{Language, Node};
+use tree_sitter::{Language};
 
 use crate::{paths::build_path_dto, read_file, tree::build_tree, head_file::build_head_file_text};
-
-pub fn build_page_file_text<'bytes>(
-    language: &Language,
-    root_node: &Node,
-    bytes: &'bytes [u8],
-) -> &'bytes [u8] {
-    bytes
-}
 
 pub fn build_page_directory_messages(
     output_directory_path: &String,
@@ -33,11 +25,9 @@ pub fn build_page_directory_messages(
     let bytes = buffer.as_ref();
 
     {
-        let page_file_text = build_page_file_text(&language, &root_node, bytes);
-
         let mut file = File::create(&path_dto.page_output_path).unwrap();
 
-        file.write_all(page_file_text).unwrap();
+        file.write_all(bytes).unwrap();
 
         let update = object! {
             k: 4,

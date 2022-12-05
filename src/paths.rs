@@ -1,4 +1,4 @@
-use std::{collections::hash_map::DefaultHasher, ffi::OsStr, hash::Hasher, path::{PathBuf, Path}, borrow::Cow};
+use std::{collections::hash_map::DefaultHasher, ffi::OsStr, hash::Hasher, path::PathBuf};
 
 fn build_new_path_buf(old_path_buf: &PathBuf) -> PathBuf {
     let file_stem = old_path_buf.file_stem().unwrap_or_default();
@@ -21,20 +21,6 @@ fn build_new_path_buf(old_path_buf: &PathBuf) -> PathBuf {
     }
 
     new_path_buf
-}
-
-pub fn get_apps_path_buf(old_path_buf: &PathBuf) -> Option<PathBuf> {
-    let mut new_path_buf = PathBuf::new();
-
-    for osstr in old_path_buf {
-        new_path_buf.push(osstr);
-
-        if osstr == "app" {
-            return Some(new_path_buf);
-        }
-    }
-
-    return None
 }
 
 pub fn get_pages_path_buf(old_path_buf: &PathBuf) -> Option<PathBuf> {
