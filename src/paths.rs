@@ -1,4 +1,4 @@
-use std::{collections::hash_map::DefaultHasher, ffi::OsStr, hash::Hasher, path::PathBuf};
+use std::{collections::hash_map::DefaultHasher, ffi::OsStr, hash::Hasher, path::{PathBuf, Path}, borrow::Cow};
 
 fn build_new_path_buf(old_path_buf: &PathBuf) -> PathBuf {
     let file_stem = old_path_buf.file_stem().unwrap_or_default();
@@ -122,16 +122,21 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
     Some(path_dto)
 }
 
-pub fn build_page_document_path_bufs(
+pub fn build_page_document_path_buf_option(
     pages_path_buf: PathBuf,
-) -> Vec<PathBuf> {
+) -> Option<PathBuf> {
     let file_names = ["_document.js", "_document.jsx", "_document.ts", "_document.tsx"];
 
-    file_names.iter().map(|s| {
-        let mut path_buf = pages_path_buf.clone();
+    let path_bufs: Vec<PathBuf> = file_names
+        .iter()
+        .map(|s| {
+            let mut path_buf = pages_path_buf.clone();
+            path_buf.push(s);
 
-        path_buf.push(s);
+            path_buf
+        })
+        .filter(|path_buf| path_buf.exists())
+        .collect();
 
-        path_buf
-    }).collect()
+    path_bufs.first().map(|p| p.to_owned())
 }

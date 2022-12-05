@@ -16,7 +16,7 @@ mod tree;
 mod queries;
 
 use crate::page_file::build_page_file_text;
-use crate::paths::{build_path_dto, get_apps_path_buf, build_byte_hash, build_output_path, get_pages_path_buf, build_page_document_path_bufs};
+use crate::paths::{build_path_dto, get_apps_path_buf, build_byte_hash, build_output_path, get_pages_path_buf, build_page_document_path_buf_option};
 use crate::tree::build_tree;
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
@@ -116,9 +116,7 @@ fn main() {
         .and_then(|path_buf| get_pages_path_buf(path_buf));
 
     if let Some(pages_path_buf) = pages_path_buf_option {
-        let pp = build_page_document_path_bufs(pages_path_buf)
-            .iter()
-            .filter(|path_buf| path_buf.exists());
+        let pp = build_page_document_path_buf_option(pages_path_buf);
 
     //     let mut document_path_buf = app_path_buf.clone();
     //     document_path_buf.push("_document.tsx");
