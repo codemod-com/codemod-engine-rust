@@ -13,6 +13,7 @@ mod head_file;
 mod page_file;
 mod paths;
 mod tree;
+mod queries;
 
 use crate::page_file::build_page_file_text;
 use crate::paths::build_path_dto;
