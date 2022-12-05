@@ -73,10 +73,7 @@ fn main() {
         .first()
         .and_then(|path_buf| get_pages_path_buf(path_buf));
 
-    let page_path_bufs = page_path_bufs.clone();   
-
     for old_path_buf in page_path_bufs {
-        // let old_path_buf = old_path_buf.to_owned();
         let output_directory_path = command_line_arguments.output_directory_path.clone();
 
         thread::spawn(move || {
@@ -142,11 +139,14 @@ fn main() {
             let root_node = tree.root_node();
             let bytes: &[u8] = buffer.as_ref();
 
-            let script_jsx_elements = find_jsx_self_closing_element(&language, &root_node, bytes, "script");
+            let script_jsx_elements: Vec<&str> = find_jsx_self_closing_element(&language, &root_node, bytes, "script")
+                .iter()
+                .map(|node| node.utf8_text(bytes).unwrap())
+                .collect();
 
-            dbg!("{}", script_jsx_elements);
-            // continue here
+            
 
+            // // continue here
         }
 
     //     let mut document_path_buf = app_path_buf.clone();
