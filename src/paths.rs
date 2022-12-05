@@ -109,7 +109,7 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
 }
 
 pub fn build_page_document_path_buf_option(
-    pages_path_buf: PathBuf,
+    pages_path_buf: &PathBuf,
 ) -> Option<PathBuf> {
     let file_names = ["_document.js", "_document.jsx", "_document.ts", "_document.tsx"];
 
