@@ -1,4 +1,5 @@
 use std::io::{BufReader, Read, Write};
+use std::path::Path;
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
@@ -16,7 +17,7 @@ mod tree;
 mod queries;
 
 use crate::page_file::build_page_file_text;
-use crate::paths::{build_path_dto, get_apps_path_buf, build_byte_hash, build_output_path, get_pages_path_buf, build_page_document_path_buf_option};
+use crate::paths::{build_path_dto, get_pages_path_buf, build_page_document_path_buf_option};
 use crate::tree::build_tree;
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
@@ -36,6 +37,17 @@ fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob
                 .any(|ap| ap.is_match(CandidatePath::from(path)));
         })
         .collect::<Vec<PathBuf>>();
+}
+
+fn read_file<P: AsRef<Path>>(path: P) -> Vec<u8> {
+    let file = File::open(path).unwrap();
+
+    let mut reader = BufReader::new(file);
+    let mut buffer = Vec::new();
+
+    reader.read_to_end(&mut buffer).unwrap();
+
+    buffer
 }
 
 fn main() {
@@ -64,12 +76,7 @@ fn main() {
 
         let path_dto = path_dto_option.unwrap();
 
-        let old_file = File::open(&path_dto.old_path).unwrap();
-
-        let mut reader = BufReader::new(old_file);
-        let mut buffer = Vec::new();
-
-        reader.read_to_end(&mut buffer).unwrap();
+        let buffer = read_file(&path_dto.old_path);
 
         let tree = build_tree(&language, &buffer);
         let root_node = tree.root_node();
@@ -119,14 +126,14 @@ fn main() {
         let page_document_path_buf_option = build_page_document_path_buf_option(pages_path_buf);
 
         if let Some(page_document_path_buf) = page_document_path_buf_option {
-            let file = File::open(page_document_path_buf).unwrap();
+            let buffer = read_file(&page_document_path_buf);
 
-            let mut reader = BufReader::new(file);
-            let mut buffer = Vec::new();
-
-            reader.read_to_end(&mut buffer).unwrap();
+            let tree = build_tree(&language, &buffer);
+            let root_node = tree.root_node();
+            let bytes: &[u8] = buffer.as_ref();
 
             
+
         }
 
     //     let mut document_path_buf = app_path_buf.clone();
@@ -158,3 +165,4 @@ fn main() {
 
     println!("{}", json::stringify(finish_message));
 }
+
