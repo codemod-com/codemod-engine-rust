@@ -1,9 +1,28 @@
 use tree_sitter::{Language, Node, Query, QueryCursor};
 
+fn match_nodes<'a>(
+    query: &Query,
+    root_node: &Node<'a>,
+    bytes: &'a [u8],
+    capture_index: u32,
+) -> Vec<Node<'a>> {
+    let mut query_cursor = QueryCursor::new();
+
+    let query_matches = query_cursor.matches(&query, *root_node, bytes);
+
+    return query_matches
+        .flat_map(|query_match| {
+            return query_match
+                .nodes_for_capture_index(capture_index)
+                .collect::<Vec<Node>>();
+        })
+        .collect::<Vec<Node<'a>>>();
+}
+
 pub fn find_next_head_import_statements<'a>(
     language: &Language,
     root_node: &Node<'a>,
-    bytes: &[u8],
+    bytes: &'a [u8],
 ) -> Vec<Node<'a>> {
     let query = Query::new(
         *language,
@@ -19,25 +38,15 @@ pub fn find_next_head_import_statements<'a>(
     )
     .unwrap();
 
-    let identifier_index = query.capture_index_for_name("identifier").unwrap();
+    let capture_index = query.capture_index_for_name("identifier").unwrap();
 
-    let mut query_cursor = QueryCursor::new();
-
-    let query_matches = query_cursor.matches(&query, *root_node, bytes);
-
-    return query_matches
-        .flat_map(|query_match| {
-            return query_match
-                .nodes_for_capture_index(identifier_index)
-                .collect::<Vec<Node>>();
-        })
-        .collect::<Vec<Node>>();
+    return match_nodes(&query, root_node, bytes, capture_index);
 }
 
 pub fn find_head_jsx_elements<'a>(
     language: &Language,
     root_node: &Node<'a>,
-    text_provider: &[u8],
+    bytes: &'a [u8],
     statement: &Node
 ) -> Vec<Node<'a>> {
     let source = r#"(
@@ -49,21 +58,11 @@ pub fn find_head_jsx_elements<'a>(
         ) @jsx_element
     )"#;
 
-    let source = source.replace("@_name", &statement.utf8_text(text_provider).unwrap());
+    let source = source.replace("@_name", &statement.utf8_text(bytes).unwrap());
 
     let query = Query::new(*language, &source).unwrap();
 
-    let jsx_element_index = query.capture_index_for_name("jsx_element").unwrap();
+    let capture_index = query.capture_index_for_name("jsx_element").unwrap();
 
-    let mut query_cursor = QueryCursor::new();
-
-    let query_matches = query_cursor.matches(&query, *root_node, text_provider);
-
-    return query_matches
-        .flat_map(|query_match| {
-            return query_match
-                .nodes_for_capture_index(jsx_element_index)
-                .collect::<Vec<Node>>();
-        })
-        .collect::<Vec<Node>>();
+    return match_nodes(&query, root_node, bytes, capture_index);
 }
