@@ -37,6 +37,20 @@ pub fn get_apps_path_buf(old_path_buf: &PathBuf) -> Option<PathBuf> {
     return None
 }
 
+pub fn get_pages_path_buf(old_path_buf: &PathBuf) -> Option<PathBuf> {
+    let mut new_path_buf = PathBuf::new();
+
+    for osstr in old_path_buf {
+        new_path_buf.push(osstr);
+
+        if osstr == "pages" {
+            return Some(new_path_buf);
+        }
+    }
+
+    return None
+}
+
 pub struct PathDto {
     pub old_path: String,
     pub new_page_path: String,
@@ -106,4 +120,18 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
     };
 
     Some(path_dto)
+}
+
+pub fn build_page_document_path_bufs(
+    pages_path_buf: PathBuf,
+) -> Vec<PathBuf> {
+    let file_names = ["_document.js", "_document.jsx", "_document.ts", "_document.tsx"];
+
+    file_names.iter().map(|s| {
+        let mut path_buf = pages_path_buf.clone();
+
+        path_buf.push(s);
+
+        path_buf
+    }).collect()
 }

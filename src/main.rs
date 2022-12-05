@@ -16,7 +16,7 @@ mod tree;
 mod queries;
 
 use crate::page_file::build_page_file_text;
-use crate::paths::{build_path_dto, get_apps_path_buf, build_byte_hash, build_output_path};
+use crate::paths::{build_path_dto, get_apps_path_buf, build_byte_hash, build_output_path, get_pages_path_buf, build_page_document_path_bufs};
 use crate::tree::build_tree;
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
@@ -111,25 +111,36 @@ fn main() {
     }
 
     // app/layout.tsx
-    let app_path_buf_option = page_path_bufs
+    let pages_path_buf_option = page_path_bufs
         .first()
-        .and_then(|path_buf| get_apps_path_buf(path_buf));
+        .and_then(|path_buf| get_pages_path_buf(path_buf));
 
-    if let Some(mut app_path_buf) = app_path_buf_option {
-        app_path_buf.push("layout.tsx");
+    if let Some(pages_path_buf) = pages_path_buf_option {
+        let pp = build_page_document_path_bufs(pages_path_buf)
+            .iter()
+            .filter(|path_buf| path_buf.exists());
 
-        let new_app_layout_path = app_path_buf.to_str().unwrap().to_string();
+    //     let mut document_path_buf = app_path_buf.clone();
+    //     document_path_buf.push("_document.tsx");
 
-        let output_path = build_output_path(&command_line_arguments.output_directory_path, &new_app_layout_path, ".tsx");
+    //     let mut document_path_buf = app_path_buf.clone();
+    //     document_path_buf.push("_app.tsx");
 
-        let create_message = object! {
-            k: 4,
-            p: new_app_layout_path,
-            o: output_path,
-            c: "nextjs"
-        };
 
-        println!("{}", json::stringify(create_message));
+    //     app_path_buf.push("layout.tsx");
+
+    //     let new_app_layout_path = app_path_buf.to_str().unwrap().to_string();
+
+    //     let output_path = build_output_path(&command_line_arguments.output_directory_path, &new_app_layout_path, ".tsx");
+
+    //     let create_message = object! {
+    //         k: 4,
+    //         p: new_app_layout_path,
+    //         o: output_path,
+    //         c: "nextjs"
+    //     };
+
+    //     println!("{}", json::stringify(create_message));
     }
 
     let finish_message = object! {
