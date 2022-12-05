@@ -48,7 +48,7 @@ fn main() {
 
     let page_path_bufs = build_path_bufs(
         &command_line_arguments.directory,
-        &String::from("**/pages/**/*.{ts,tsx}"),
+        &command_line_arguments.pattern,
         &antipatterns,
     );
 

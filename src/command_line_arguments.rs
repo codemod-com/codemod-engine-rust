@@ -8,7 +8,7 @@ pub(crate) struct CommandLineArguments {
 
     /// Pass the glob pattern for file paths
     #[clap(short = 'p', long)]
-    pub(crate) pattern: String,
+    pub(crate) pattern: String, // "**/pages/**/*.{ts,tsx}"
 
     /// Pass the glob antipattern for file paths
     #[clap(short = 'a', long)]
