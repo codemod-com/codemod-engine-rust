@@ -116,7 +116,18 @@ fn main() {
         .and_then(|path_buf| get_pages_path_buf(path_buf));
 
     if let Some(pages_path_buf) = pages_path_buf_option {
-        let pp = build_page_document_path_buf_option(pages_path_buf);
+        let page_document_path_buf_option = build_page_document_path_buf_option(pages_path_buf);
+
+        if let Some(page_document_path_buf) = page_document_path_buf_option {
+            let file = File::open(page_document_path_buf).unwrap();
+
+            let mut reader = BufReader::new(file);
+            let mut buffer = Vec::new();
+
+            reader.read_to_end(&mut buffer).unwrap();
+
+            
+        }
 
     //     let mut document_path_buf = app_path_buf.clone();
     //     document_path_buf.push("_document.tsx");
