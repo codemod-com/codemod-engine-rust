@@ -65,12 +65,20 @@ pub fn build_output_path(
     output_path_buf.to_str().unwrap().to_string()
 }
 
-pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) -> PathDto {
+pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) -> Option<PathDto> {
     let extension = old_path_buf
         .extension()
         .unwrap_or_default()
         .to_str()
         .unwrap();
+
+    if old_path_buf.ends_with(String::from("_document.") + extension) {
+        return None
+    }
+
+    if old_path_buf.ends_with(String::from("_app.") + extension) {
+        return None
+    }
 
     let new_path_buf = build_new_path_buf(&old_path_buf);
 
@@ -89,11 +97,13 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
 
     let head_output_path = build_output_path(output_directory_path, &new_head_path, extension);
 
-    return PathDto {
+    let path_dto = PathDto {
         old_path,
         new_page_path,
         new_head_path,
         page_output_path,
         head_output_path,
     };
+
+    Some(path_dto)
 }

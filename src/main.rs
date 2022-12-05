@@ -56,7 +56,13 @@ fn main() {
     let language = tree_sitter_typescript::language_tsx();
 
     for old_path_buf in &page_path_bufs {
-        let path_dto = build_path_dto(&command_line_arguments.output_directory_path, old_path_buf);
+        let path_dto_option = build_path_dto(&command_line_arguments.output_directory_path, old_path_buf);
+
+        if path_dto_option.is_none() {
+            continue;
+        }
+
+        let path_dto = path_dto_option.unwrap();
 
         let old_file = File::open(&path_dto.old_path).unwrap();
 
