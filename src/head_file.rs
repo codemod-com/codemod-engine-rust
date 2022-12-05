@@ -22,10 +22,7 @@ pub fn build_head_file_text(language: &Language, root_node: &Node, bytes: &[u8])
                 .flat_map(|identifier| {
                     find_import_statements(&language, &root_node, bytes, &identifier)
                 })
-                .collect::<HashSet<Node>>()
-                .iter()
-                .cloned()
-                .collect::<Vec<Node>>();
+                .collect::<HashSet<Node>>();
 
             let head_text = build_head_text(&head_jsx_element, &import_statements, bytes);
 
