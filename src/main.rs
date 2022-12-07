@@ -14,11 +14,11 @@ mod head;
 mod head_file;
 mod page_file;
 mod paths;
-mod tree;
 mod queries;
+mod tree;
 
 use crate::page_file::build_page_directory_messages;
-use crate::paths::{get_pages_path_buf, build_page_document_path_buf_option, build_output_path};
+use crate::paths::{build_output_path, build_page_document_path_buf_option, get_pages_path_buf};
 use crate::queries::find_jsx_self_closing_element;
 use crate::tree::build_tree;
 
@@ -79,11 +79,7 @@ fn main() {
         let output_directory_path = command_line_arguments.output_directory_path.clone();
 
         let handle = thread::spawn(move || {
-            build_page_directory_messages(
-                &output_directory_path,
-                &language,
-                &old_path_buf,
-            );
+            build_page_directory_messages(&output_directory_path, &language, &old_path_buf);
         });
 
         handles.push(handle);
@@ -105,15 +101,11 @@ fn main() {
             let root_node = tree.root_node();
             let bytes: &[u8] = buffer.as_ref();
 
-            let script_jsx_elements: Vec<&str> = find_jsx_self_closing_element(
-                    &language,
-                    &root_node,
-                    bytes,
-                    "script"
-                )
-                .iter()
-                .map(|node| node.utf8_text(bytes).unwrap())
-                .collect();
+            let script_jsx_elements: Vec<&str> =
+                find_jsx_self_closing_element(&language, &root_node, bytes, "script")
+                    .iter()
+                    .map(|node| node.utf8_text(bytes).unwrap())
+                    .collect();
 
             let mut body = String::from("");
 
@@ -139,7 +131,7 @@ fn main() {
             let output_path = build_output_path(
                 &command_line_arguments.output_directory_path,
                 &new_app_layout_path,
-                "tsx"
+                "tsx",
             );
 
             let mut file = File::create(&output_path).unwrap();

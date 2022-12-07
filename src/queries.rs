@@ -47,7 +47,7 @@ pub fn find_head_jsx_elements<'a>(
     language: &Language,
     root_node: &Node<'a>,
     bytes: &'a [u8],
-    statement: &Node
+    statement: &Node,
 ) -> Vec<Node<'a>> {
     let source = r#"(
         (jsx_element
@@ -122,7 +122,9 @@ pub fn find_jsx_self_closing_element<'a>(
 
     let query = Query::new(*language, &source).unwrap();
 
-    let capture_index = query.capture_index_for_name("jsx_self_closing_element").unwrap();
+    let capture_index = query
+        .capture_index_for_name("jsx_self_closing_element")
+        .unwrap();
 
     return match_nodes(&query, root_node, bytes, capture_index);
 }

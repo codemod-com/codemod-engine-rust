@@ -4,9 +4,13 @@ use std::collections::HashSet;
 
 use tree_sitter::Language;
 
-use crate::{head::{
-    build_head_text,
-}, queries::{find_next_head_import_statements, find_head_jsx_elements, find_identifiers, find_import_statements}};
+use crate::{
+    head::build_head_text,
+    queries::{
+        find_head_jsx_elements, find_identifiers, find_import_statements,
+        find_next_head_import_statements,
+    },
+};
 
 pub fn build_head_file_text(language: &Language, root_node: &Node, bytes: &[u8]) -> Option<String> {
     let statements = find_next_head_import_statements(&language, &root_node, bytes);

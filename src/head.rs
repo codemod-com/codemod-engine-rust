@@ -2,7 +2,11 @@ use std::collections::HashSet;
 
 use tree_sitter::Node;
 
-pub fn build_head_text(head_node: &Node, import_statements: &HashSet<Node>, source: &[u8]) -> String {
+pub fn build_head_text(
+    head_node: &Node,
+    import_statements: &HashSet<Node>,
+    source: &[u8],
+) -> String {
     let mut string: String = String::new();
 
     for import_statement in import_statements {

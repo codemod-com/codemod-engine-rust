@@ -1,9 +1,9 @@
-use std::{path::PathBuf, fs::File, io::Write};
+use std::{fs::File, io::Write, path::PathBuf};
 
 use json::object;
-use tree_sitter::{Language};
+use tree_sitter::Language;
 
-use crate::{paths::build_path_dto, read_file, tree::build_tree, head_file::build_head_file_text};
+use crate::{head_file::build_head_file_text, paths::build_path_dto, read_file, tree::build_tree};
 
 pub fn build_page_directory_messages(
     output_directory_path: &String,

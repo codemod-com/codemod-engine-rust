@@ -34,7 +34,7 @@ pub fn get_pages_path_buf(old_path_buf: &PathBuf) -> Option<PathBuf> {
         }
     }
 
-    return None
+    return None;
 }
 
 pub struct PathDto {
@@ -73,11 +73,11 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
         .unwrap();
 
     if old_path_buf.ends_with(String::from("_document.") + extension) {
-        return None
+        return None;
     }
 
     if old_path_buf.ends_with(String::from("_app.") + extension) {
-        return None
+        return None;
     }
 
     let new_path_buf = build_new_path_buf(&old_path_buf);
@@ -108,10 +108,13 @@ pub fn build_path_dto(output_directory_path: &String, old_path_buf: &PathBuf) ->
     Some(path_dto)
 }
 
-pub fn build_page_document_path_buf_option(
-    pages_path_buf: &PathBuf,
-) -> Option<PathBuf> {
-    let file_names = ["_document.js", "_document.jsx", "_document.ts", "_document.tsx"];
+pub fn build_page_document_path_buf_option(pages_path_buf: &PathBuf) -> Option<PathBuf> {
+    let file_names = [
+        "_document.js",
+        "_document.jsx",
+        "_document.ts",
+        "_document.tsx",
+    ];
 
     let path_bufs: Vec<PathBuf> = file_names
         .iter()
