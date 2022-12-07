@@ -1,5 +1,5 @@
 use std::ffi::OsStr;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Write};
 use std::path::Path;
 use std::thread;
 use std::{fs::File, path::PathBuf};
@@ -141,6 +141,10 @@ fn main() {
                 &new_app_layout_path,
                 "tsx"
             );
+
+            let mut file = File::create(&output_path).unwrap();
+
+            file.write_all(body.as_bytes()).unwrap();
 
             let create_message = object! {
                 k: 4,
