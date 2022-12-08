@@ -10,6 +10,7 @@ use json::object;
 use wax::{CandidatePath, Glob, Pattern};
 
 mod command_line_arguments;
+mod compare_command_line_arguments;
 mod head;
 mod head_file;
 mod page_file;
@@ -17,10 +18,14 @@ mod paths;
 mod queries;
 mod tree;
 
+use crate::compare_command_line_arguments::CompareCommandLineArguments;
 use crate::page_file::build_page_directory_messages;
 use crate::paths::{build_output_path, build_page_document_path_buf_option, get_pages_path_buf};
 use crate::queries::find_jsx_self_closing_element;
 use crate::tree::build_tree;
+
+use tree_sitter::Language;
+use tree_sitter_traversal::{traverse_tree, Order};
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
     let glob = Glob::new(&pattern).unwrap();
@@ -52,7 +57,73 @@ fn read_file<P: AsRef<Path>>(path: P) -> Vec<u8> {
     buffer
 }
 
+fn get_node_texts(path: &String, language: &Language) -> Vec<String> {
+    let left_buffer = read_file(path);
+    let left_tree = build_tree(&language, &left_buffer);
+
+    let mut left_iterator = traverse_tree(&left_tree, Order::Post)
+        .into_iter()
+        .filter(|node| node.child_count() == 0)
+        .collect::<Vec<_>>();
+
+    left_iterator.sort_by_key(|node| node.byte_range().start);
+
+    let unimportant_strings = [String::from("("), String::from(")"), String::from(";")];
+
+    return left_iterator
+        .into_iter()
+        .map(|node| node.utf8_text(&left_buffer).unwrap().to_string())
+        .filter(|str| {
+            !unimportant_strings.contains(str) && str.replace("\n", "").replace(" ", "") != ""
+        })
+        .collect::<Vec<_>>();
+}
+
 fn main() {
+    let language = tree_sitter_typescript::language_tsx();
+
+    let compare_cla_option = CompareCommandLineArguments::try_parse();
+
+    if let Ok(compare_cla) = compare_cla_option {
+        let left_node_texts = get_node_texts(&compare_cla.left, &language);
+
+        let right_node_texts = get_node_texts(&compare_cla.right, &language);
+
+        if left_node_texts.len() != right_node_texts.len() {
+            let message = object! {
+                k: 5,
+                probablyEqual: false,
+            };
+
+            println!("{}", json::stringify(message));
+
+            return;
+        }
+
+        for i in 0..left_node_texts.len() {
+            let left_text = &left_node_texts[i];
+            let right_text = &right_node_texts[i];
+
+            if left_text != right_text {
+                let message = object! {
+                    k: 5,
+                    probablyEqual: false,
+                };
+
+                println!("{}", json::stringify(message));
+            }
+        }
+
+        let message = object! {
+            k: 5,
+            probablyEqual: true,
+        };
+
+        println!("{}", json::stringify(message));
+
+        return;
+    }
+
     let command_line_arguments = CommandLineArguments::parse();
 
     let antipatterns: Vec<Glob> = command_line_arguments
@@ -66,8 +137,6 @@ fn main() {
         &command_line_arguments.pattern,
         &antipatterns,
     );
-
-    let language = tree_sitter_typescript::language_tsx();
 
     let pages_path_buf_option = &page_path_bufs
         .first()
