@@ -10,7 +10,6 @@ use json::{object, parse};
 use wax::{CandidatePath, Glob, Pattern};
 
 mod command_line_arguments;
-mod compare_command_line_arguments;
 mod head;
 mod head_file;
 mod page_file;
