@@ -1,12 +1,14 @@
+
+use std::arch::x86_64::_CMP_TRUE_UQ;
 use std::ffi::OsStr;
-use std::io::{BufReader, Read, Write};
+use std::io::{BufReader, Read, Write, BufRead};
 use std::path::Path;
 use std::thread;
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use command_line_arguments::CommandLineArguments;
-use json::object;
+use json::{object, parse};
 use wax::{CandidatePath, Glob, Pattern};
 
 mod command_line_arguments;
@@ -18,7 +20,6 @@ mod paths;
 mod queries;
 mod tree;
 
-use crate::compare_command_line_arguments::CompareCommandLineArguments;
 use crate::page_file::build_page_directory_messages;
 use crate::paths::{build_output_path, build_page_document_path_buf_option, get_pages_path_buf};
 use crate::queries::find_jsx_self_closing_element;
@@ -79,52 +80,78 @@ fn get_node_texts(path: &String, language: &Language) -> Vec<String> {
         .collect::<Vec<_>>();
 }
 
+fn compare_string_vectors (left: &Vec<String>, right: &Vec<String>) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+
+    for i in 0..left.len() {
+        let left_text = &left[i];
+        let right_text = &right[i];
+
+        if left_text != right_text {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 fn main() {
     let language = tree_sitter_typescript::language_tsx();
 
-    let compare_cla_option = CompareCommandLineArguments::try_parse();
+    let command_line_arguments = CommandLineArguments::try_parse();
 
-    if let Ok(compare_cla) = compare_cla_option {
-        let left_node_texts = get_node_texts(&compare_cla.left, &language);
+    if command_line_arguments.is_err() {
+        let stdin = std::io::stdin();
+    
+        for line_result in stdin.lock().lines() {
+            let line = line_result.unwrap();
+            let json_value = parse(&line).unwrap();
 
-        let right_node_texts = get_node_texts(&compare_cla.right, &language);
-
-        if left_node_texts.len() != right_node_texts.len() {
-            let message = object! {
-                k: 5,
-                probablyEqual: false,
+            let message_kind_option = match json_value.has_key("k") {
+                true => json_value["k"].as_u8(),
+                false => None,
             };
 
-            println!("{}", json::stringify(message));
+            let message_id_option = match json_value.has_key("i") {
+                true => json_value["i"].as_str(),
+                false => None,
+            };
 
-            return;
+            let left_path_option = match json_value.has_key("l") {
+                true => json_value["l"].as_str(),
+                false => None,
+            };
+
+            let right_path_option = match json_value.has_key("r") {
+                true => json_value["r"].as_str(),
+                false => None,
+            };
+
+            match (message_kind_option, message_id_option, left_path_option, right_path_option) {
+                (Some(message_kind), Some(message_id), Some(left_path), Some(right_path)) => {
+                    let left_node_texts = get_node_texts(&left_path.to_string(), &language);
+                    let right_node_texts = get_node_texts(&right_path.to_string(), &language);
+    
+                    let equal = compare_string_vectors(&left_node_texts, &right_node_texts);
+
+                    let message = object! {
+                        k: message_kind,
+                        i: message_id,
+                        e: equal,
+                    };
+        
+                    println!("{}", json::stringify(message));
+                },
+                _ => {
+
+                },
+            };
         }
-
-        for i in 0..left_node_texts.len() {
-            let left_text = &left_node_texts[i];
-            let right_text = &right_node_texts[i];
-
-            if left_text != right_text {
-                let message = object! {
-                    k: 5,
-                    probablyEqual: false,
-                };
-
-                println!("{}", json::stringify(message));
-            }
-        }
-
-        let message = object! {
-            k: 5,
-            probablyEqual: true,
-        };
-
-        println!("{}", json::stringify(message));
-
-        return;
     }
 
-    let command_line_arguments = CommandLineArguments::parse();
+    let command_line_arguments = command_line_arguments.unwrap();
 
     let antipatterns: Vec<Glob> = command_line_arguments
         .antipatterns
