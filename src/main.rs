@@ -1,7 +1,6 @@
-
 use std::arch::x86_64::_CMP_TRUE_UQ;
 use std::ffi::OsStr;
-use std::io::{BufReader, Read, Write, BufRead};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
 use std::thread;
 use std::{fs::File, path::PathBuf};
@@ -80,7 +79,7 @@ fn get_node_texts(path: &String, language: &Language) -> Vec<String> {
         .collect::<Vec<_>>();
 }
 
-fn compare_string_vectors (left: &Vec<String>, right: &Vec<String>) -> bool {
+fn compare_string_vectors(left: &Vec<String>, right: &Vec<String>) -> bool {
     if left.len() != right.len() {
         return false;
     }
@@ -104,7 +103,7 @@ fn main() {
 
     if command_line_arguments.is_err() {
         let stdin = std::io::stdin();
-    
+
         for line_result in stdin.lock().lines() {
             let line = line_result.unwrap();
             let json_value = parse(&line).unwrap();
@@ -129,11 +128,16 @@ fn main() {
                 false => None,
             };
 
-            match (message_kind_option, message_id_option, left_path_option, right_path_option) {
+            match (
+                message_kind_option,
+                message_id_option,
+                left_path_option,
+                right_path_option,
+            ) {
                 (Some(message_kind), Some(message_id), Some(left_path), Some(right_path)) => {
                     let left_node_texts = get_node_texts(&left_path.to_string(), &language);
                     let right_node_texts = get_node_texts(&right_path.to_string(), &language);
-    
+
                     let equal = compare_string_vectors(&left_node_texts, &right_node_texts);
 
                     let message = object! {
@@ -141,12 +145,10 @@ fn main() {
                         i: message_id,
                         e: equal,
                     };
-        
-                    println!("{}", json::stringify(message));
-                },
-                _ => {
 
-                },
+                    println!("{}", json::stringify(message));
+                }
+                _ => {}
             };
         }
     }
