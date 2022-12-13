@@ -1,12 +1,12 @@
 use std::ffi::OsStr;
-use std::io::{BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
 use std::thread;
 use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use command_line_arguments::CommandLineArguments;
-use json::object;
+use json::{object, parse};
 use wax::{CandidatePath, Glob, Pattern};
 
 mod command_line_arguments;
@@ -21,6 +21,9 @@ use crate::page_file::build_page_directory_messages;
 use crate::paths::{build_output_path, build_page_document_path_buf_option, get_pages_path_buf};
 use crate::queries::find_jsx_self_closing_element;
 use crate::tree::build_tree;
+
+use tree_sitter::Language;
+use tree_sitter_traversal::{traverse_tree, Order};
 
 fn build_path_bufs(directory: &String, pattern: &String, antipatterns: &Vec<Glob>) -> Vec<PathBuf> {
     let glob = Glob::new(&pattern).unwrap();
@@ -52,8 +55,103 @@ fn read_file<P: AsRef<Path>>(path: P) -> Vec<u8> {
     buffer
 }
 
+fn get_node_texts(path: &String, language: &Language) -> Vec<String> {
+    let left_buffer = read_file(path);
+    let left_tree = build_tree(&language, &left_buffer);
+
+    let mut left_iterator = traverse_tree(&left_tree, Order::Post)
+        .into_iter()
+        .filter(|node| node.child_count() == 0)
+        .collect::<Vec<_>>();
+
+    left_iterator.sort_by_key(|node| node.byte_range().start);
+
+    let unimportant_strings = [String::from("("), String::from(")"), String::from(";")];
+
+    return left_iterator
+        .into_iter()
+        .map(|node| node.utf8_text(&left_buffer).unwrap().to_string())
+        .filter(|str| {
+            !unimportant_strings.contains(str) && str.replace("\n", "").replace(" ", "") != ""
+        })
+        .collect::<Vec<_>>();
+}
+
+fn compare_string_vectors(left: &Vec<String>, right: &Vec<String>) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+
+    for i in 0..left.len() {
+        let left_text = &left[i];
+        let right_text = &right[i];
+
+        if left_text != right_text {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 fn main() {
-    let command_line_arguments = CommandLineArguments::parse();
+    let language = tree_sitter_typescript::language_tsx();
+
+    let command_line_arguments = CommandLineArguments::try_parse();
+
+    if command_line_arguments.is_err() {
+        let stdin = std::io::stdin();
+
+        for line_result in stdin.lock().lines() {
+            let line = line_result.unwrap();
+            let json_value = parse(&line).unwrap();
+
+            let message_kind_option = match json_value.has_key("k") {
+                true => json_value["k"].as_u8(),
+                false => None,
+            };
+
+            let message_id_option = match json_value.has_key("i") {
+                true => json_value["i"].as_str(),
+                false => None,
+            };
+
+            let left_path_option = match json_value.has_key("l") {
+                true => json_value["l"].as_str(),
+                false => None,
+            };
+
+            let right_path_option = match json_value.has_key("r") {
+                true => json_value["r"].as_str(),
+                false => None,
+            };
+
+            match (
+                message_kind_option,
+                message_id_option,
+                left_path_option,
+                right_path_option,
+            ) {
+                (Some(message_kind), Some(message_id), Some(left_path), Some(right_path)) => {
+                    let left_node_texts = get_node_texts(&left_path.to_string(), &language);
+                    let right_node_texts = get_node_texts(&right_path.to_string(), &language);
+
+                    let equal = compare_string_vectors(&left_node_texts, &right_node_texts);
+
+                    let message = object! {
+                        k: message_kind,
+                        i: message_id,
+                        e: equal,
+                    };
+
+                    println!("{}", json::stringify(message));
+                }
+                _ => {}
+            };
+        }
+    }
+
+    let command_line_arguments = command_line_arguments.unwrap();
 
     let antipatterns: Vec<Glob> = command_line_arguments
         .antipatterns
@@ -66,8 +164,6 @@ fn main() {
         &command_line_arguments.pattern,
         &antipatterns,
     );
-
-    let language = tree_sitter_typescript::language_tsx();
 
     let pages_path_buf_option = &page_path_bufs
         .first()
