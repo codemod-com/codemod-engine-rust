@@ -1,4 +1,3 @@
-use std::arch::x86_64::_CMP_TRUE_UQ;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
