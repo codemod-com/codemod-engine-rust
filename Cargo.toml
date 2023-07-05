@@ -1,5 +1,5 @@
 [package]
-name = "nora-rust-engine"
+name = "codemod-engine-rust"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,9 +8,6 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
-wax = { version = "0.5.0" }
 json = { version = "0.12.4" }
-tree-sitter = "0.20.9"
-tree-sitter-traversal = "0.1.2"
-tree-sitter-typescript = { git = "https://github.com/tree-sitter/tree-sitter-typescript.git" }
-tree-sitter-javascript = { git = "https://github.com/tree-sitter/tree-sitter-javascript.git" }
+piranha = { git = "https://github.com/intuita-inc/piranha.git", rev = "50f74ae462574c7168ddb872eea3272193b090f7" }
+glob = { version = "0.3.1" }
