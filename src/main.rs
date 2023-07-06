@@ -37,6 +37,17 @@ pub fn build_output_path(
 
 fn main() {
     let command_line_arguments = CommandLineArguments::try_parse();
+
+    if command_line_arguments.is_err() {
+        let error_message = object! {
+            message: command_line_arguments.unwrap_err().to_string(),
+        };
+
+        eprintln!("{}", json::stringify(error_message));
+
+        return;
+    }
+
     let command_line_arguments = command_line_arguments.unwrap();
 
     let patterns = command_line_arguments
@@ -71,6 +82,7 @@ fn main() {
         .include(patterns)
         .exclude(antipatterns)
         .language(language)
+        .allow_dirty_ast(true)
         .dry_run(true)
         .build();
 
