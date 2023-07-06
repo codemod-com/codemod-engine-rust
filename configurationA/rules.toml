@@ -1,0 +1,9 @@
+[[rules]]
+name = "remove_for_statements"
+query = """
+(
+    (for_statement) @for_stmt
+)
+"""
+replace = ""
+replace_node = "for_stmt"
