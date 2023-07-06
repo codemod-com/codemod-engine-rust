@@ -51,12 +51,26 @@ fn main() {
         .map(|p| Pattern::new(p).unwrap())
         .collect();
 
+    let language = PiranhaLanguage::from_str(&command_line_arguments.language);
+
+    if language.is_err() {
+        let error_message = object! {
+            message: "The provided language is invalid.",
+        };
+
+        eprintln!("{}", json::stringify(error_message));
+
+        return;
+    }
+
+    let language = language.unwrap();
+
     let piranha_arguments = PiranhaArgumentsBuilder::default()
         .path_to_codebase(command_line_arguments.input_directory_path)
         .path_to_configurations(command_line_arguments.configuration_directory_path)
         .include(patterns)
         .exclude(antipatterns)
-        .language(PiranhaLanguage::from_str("ts").unwrap())
+        .language(language)
         .dry_run(true)
         .build();
 

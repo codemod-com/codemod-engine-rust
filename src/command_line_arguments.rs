@@ -21,4 +21,8 @@ pub(crate) struct CommandLineArguments {
     /// Pass the glob antipattern for file paths
     #[clap(short = 'a', long)]
     pub(crate) antipatterns: Vec<String>,
+
+    // Pass the language
+    #[clap(short = 'l', long)]
+    pub(crate) language: String,
 }
